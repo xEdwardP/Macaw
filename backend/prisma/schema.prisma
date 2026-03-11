@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model University {
+  id             String   @id @default(cuid())
+  name           String
+  domain         String   @unique
+  logo           String?
+  commissionRate Float    @default(0.10)
+  createdAt      DateTime @default(now())
+  users          User[]
+  subjects       Subject[]
+  subsidies      Subsidy[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  universityId String?
+  name         String
+  email        String   @unique
+  password     String
+  role         Role     @default(student)
+  avatar       String?
+  career       String?
+  semester     Int?
+  gpa          Float?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  university        University?   @relation(fields: [universityId], references: [id])
+  tutorProfile      TutorProfile?
+  wallet            Wallet?
+  sessionsAsStudent Session[]     @relation("StudentSessions")
+  sessionsAsTutor   Session[]     @relation("TutorSessions")
+  reviewsGiven      Review[]      @relation("ReviewsGiven")
+  reviewsReceived   Review[]      @relation("ReviewsReceived")
+  subsidies         Subsidy[]
+}
+
+enum Role {
+  student
+  tutor
+  university
+  admin
+}
+
+model TutorProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  bio           String?
+  hourlyRate    Float    @default(5.00)
+  isVerified    Boolean  @default(false)
+  totalSessions Int      @default(0)
+  averageRating Float    @default(0)
+  badges        String[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id])
+  subjects     TutorSubject[]
+  availability Availability[]
+}
+
+model Subject {
+  id           String   @id @default(cuid())
+  universityId String?
+  name         String
+  code         String?
+  area         String?
+  createdAt    DateTime @default(now())
+
+  university University?    @relation(fields: [universityId], references: [id])
+  tutors     TutorSubject[]
+  sessions   Session[]
+}
+
+model TutorSubject {
+  id             String       @id @default(cuid())
+  tutorProfileId String
+  subjectId      String
+  level          SubjectLevel @default(intermediate)
+
+  tutorProfile TutorProfile @relation(fields: [tutorProfileId], references: [id])
+  subject      Subject      @relation(fields: [subjectId],      references: [id])
+
+  @@unique([tutorProfileId, subjectId])
+}
+
+enum SubjectLevel {
+  basic
+  intermediate
+  advanced
+}
+
+model Availability {
+  id             String       @id @default(cuid())
+  tutorProfileId String
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+
+  tutorProfile TutorProfile @relation(fields: [tutorProfileId], references: [id])
+}
+
+model Session {
+  id         String        @id @default(cuid())
+  studentId  String
+  tutorId    String
+  subjectId  String
+  date       DateTime
+  startTime  String
+  endTime    String
+  status     SessionStatus @default(pending)
+  meetingUrl String?
+  price      Float
+  notes      String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  student      User          @relation("StudentSessions", fields: [studentId], references: [id])
+  tutor        User          @relation("TutorSessions",   fields: [tutorId],   references: [id])
+  subject      Subject       @relation(fields: [subjectId], references: [id])
+  review       Review?
+  transactions Transaction[]
+}
+
+enum SessionStatus {
+  pending
+  confirmed
+  completed
+  cancelled
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  sessionId  String   @unique
+  reviewerId String
+  revieweeId String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  session  Session @relation(fields: [sessionId],  references: [id])
+  reviewer User    @relation("ReviewsGiven",    fields: [reviewerId], references: [id])
+  reviewee User    @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+}
+
+model Wallet {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  balance        Float    @default(0)
+  frozen         Float    @default(0)
+  lifetimeEarned Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  walletId    String
+  type        TransactionType
+  amount      Float
+  description String?
+  sessionId   String?
+  createdAt   DateTime        @default(now())
+
+  wallet  Wallet   @relation(fields: [walletId],  references: [id])
+  session Session? @relation(fields: [sessionId], references: [id])
+}
+
+enum TransactionType {
+  recharge
+  frozen
+  released
+  commission
+  subsidy
+  withdrawal
+  refund
+}
+
+model Subsidy {
+  id           String     @id @default(cuid())
+  universityId String
+  studentId    String
+  amount       Float
+  reason       String?
+  appliedAt    DateTime   @default(now())
+
+  university University @relation(fields: [universityId], references: [id])
+  student    User       @relation(fields: [studentId],    references: [id])
+}
