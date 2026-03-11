@@ -46,4 +46,22 @@ const removeSubject = async (req, res) => {
   }
 };
 
-module.exports = { getAll, getOne, updateProfile, addSubject, removeSubject };
+const getAvailability = async (req, res) => {
+  try {
+    const result = await service.getAvailability(req.params.id)
+    return response.ok(res, result)
+  } catch (err) {
+    return response.error(res, err.message)
+  }
+}
+
+const setAvailability = async (req, res) => {
+  try {
+    const result = await service.setAvailability(req.user.id, req.body.slots)
+    return response.ok(res, result, 'Disponibilidad actualizada')
+  } catch (err) {
+    return response.error(res, err.message)
+  }
+}
+
+module.exports = { getAll, getOne, updateProfile, addSubject, removeSubject, getAvailability, setAvailability }

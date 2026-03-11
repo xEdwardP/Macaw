@@ -110,4 +110,38 @@ const removeSubject = async (userId, subjectId) => {
   });
 };
 
-module.exports = { getAll, getOne, updateProfile, addSubject, removeSubject };
+const getAvailability = async (tutorId) => {
+  const profile = await prisma.tutorProfile.findUnique({
+    where:   { userId: tutorId },
+    include: { availability: { orderBy: { dayOfWeek: 'asc' } } }
+  })
+  if (!profile) throw new Error('Tutor no encontrado')
+  return profile.availability
+}
+
+const setAvailability = async (userId, slots) => {
+  const profile = await prisma.tutorProfile.findUnique({ where: { userId } })
+  if (!profile) throw new Error('Perfil de tutor no encontrado')
+
+  await prisma.availability.deleteMany({
+    where: { tutorProfileId: profile.id }
+  })
+
+  if (!slots || slots.length === 0) return []
+
+  const created = await prisma.availability.createMany({
+    data: slots.map(s => ({
+      tutorProfileId: profile.id,
+      dayOfWeek:      s.dayOfWeek,
+      startTime:      s.startTime,
+      endTime:        s.endTime,
+    }))
+  })
+
+  return await prisma.availability.findMany({
+    where:   { tutorProfileId: profile.id },
+    orderBy: { dayOfWeek: 'asc' }
+  })
+}
+
+module.exports = { getAll, getOne, updateProfile, addSubject, removeSubject, getAvailability, setAvailability }
