@@ -21,42 +21,39 @@ const tutorSelect = {
   },
 };
 
-const getAll = async ({ search, subjectId, minRating, maxRate }) => {
+const getAll = async ({ search, minRating, maxRate }) => {
   const where = {
-    role: "tutor",
+    role:     'tutor',
     isActive: true,
-    tutorProfile: { isNot: null },
-  };
+  }
 
   if (search) {
     where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { career: { contains: search, mode: "insensitive" } },
-    ];
-  }
-
-  if (minRating) {
-    where.tutorProfile = {
-      ...where.tutorProfile,
-      averageRating: { gte: parseFloat(minRating) },
-    };
-  }
-
-  if (maxRate) {
-    where.tutorProfile = {
-      ...where.tutorProfile,
-      hourlyRate: { lte: parseFloat(maxRate) },
-    };
+      { name:   { contains: search, mode: 'insensitive' } },
+      { career: { contains: search, mode: 'insensitive' } },
+    ]
   }
 
   const tutors = await prisma.user.findMany({
     where,
     select: tutorSelect,
-    orderBy: { tutorProfile: { averageRating: "desc" } },
-  });
+    orderBy: { createdAt: 'desc' }
+  })
 
-  return tutors;
-};
+  let result = tutors.filter(t => t.tutorProfile !== null)
+
+  if (minRating) {
+    result = result.filter(t => t.tutorProfile.averageRating >= parseFloat(minRating))
+  }
+
+  if (maxRate) {
+    result = result.filter(t => t.tutorProfile.hourlyRate <= parseFloat(maxRate))
+  }
+
+  result.sort((a, b) => b.tutorProfile.averageRating - a.tutorProfile.averageRating)
+
+  return result
+}
 
 const getOne = async (id) => {
   const tutor = await prisma.user.findUnique({
