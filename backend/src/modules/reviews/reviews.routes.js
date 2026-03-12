@@ -1,8 +1,12 @@
 const router = require("express").Router();
-const { authenticate } = require("../../middlewares/auth.middleware");
+const {
+  authenticate,
+  authorize,
+} = require("../../middlewares/auth.middleware");
+const ctrl = require("./reviews.controller");
 
-router.get("/", authenticate, (req, res) => {
-  res.json({ success: true, message: "coming soon", data: [] });
-});
+router.get("/tutor/:tutorId", ctrl.getTutorReviews);
+router.post("/", authenticate, authorize("student"), ctrl.create);
+router.delete("/:id", authenticate, authorize("admin"), ctrl.remove);
 
 module.exports = router;
