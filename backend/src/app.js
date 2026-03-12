@@ -1,4 +1,5 @@
 require("dotenv").config();
+const { scheduleReminders } = require('./jobs/sessionReminders')
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -23,6 +24,7 @@ io.on("connection", (socket) => {
 });
 
 app.set("io", io);
+scheduleReminders();
 
 // Middlewares
 app.use(helmet());

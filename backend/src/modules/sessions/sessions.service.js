@@ -1,5 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { sendMail } = require("../../config/mailer");
+const templates = require("../../utils/emailTemplates");
 
 const sessionInclude = {
   student: { select: { id: true, name: true, email: true, avatar: true } },
@@ -78,10 +80,7 @@ const create = async (
 
     await tx.wallet.update({
       where: { userId: studentId },
-      data: {
-        balance: { decrement: price },
-        frozen: { increment: price },
-      },
+      data: { balance: { decrement: price }, frozen: { increment: price } },
     });
 
     await tx.transaction.create({
@@ -97,6 +96,22 @@ const create = async (
     return newSession;
   });
 
+  const student = await prisma.user.findUnique({ where: { id: studentId } });
+  const dateStr = new Date(session.date).toLocaleDateString("es-HN");
+
+  await sendMail({
+    to: student.email,
+    subject: "Sesión reservada exitosamente",
+    html: templates.sessionBooked({
+      studentName: student.name,
+      tutorName: tutor.name,
+      subject: subjectId,
+      date: dateStr,
+      startTime: session.startTime,
+      meetingUrl: session.meetingUrl,
+    }),
+  });
+
   return session;
 };
 
@@ -107,11 +122,31 @@ const confirm = async (sessionId, tutorId) => {
   if (session.status !== "pending")
     throw new Error("La sesión no está pendiente");
 
-  return await prisma.session.update({
+  const updated = await prisma.session.update({
     where: { id: sessionId },
     data: { status: "confirmed" },
     include: sessionInclude,
   });
+
+  const [student, tutor] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.studentId } }),
+    prisma.user.findUnique({ where: { id: session.tutorId } }),
+  ]);
+  const date = new Date(session.date).toLocaleDateString("es-HN");
+
+  await sendMail({
+    to: student.email,
+    subject: "Tu sesión fue confirmada",
+    html: templates.sessionConfirmed({
+      studentName: student.name,
+      tutorName: tutor.name,
+      date,
+      startTime: session.startTime,
+      meetingUrl: session.meetingUrl,
+    }),
+  });
+
+  return updated;
 };
 
 const cancel = async (sessionId, user) => {
@@ -160,10 +195,26 @@ const cancel = async (sessionId, user) => {
         walletId: studentWallet.id,
         type: "refund",
         amount: refundAmount,
-        description: `Reembolso por cancelación de sesión`,
+        description: "Reembolso por cancelación de sesión",
         sessionId,
       },
     });
+  });
+
+  const student = await prisma.user.findUnique({
+    where: { id: session.studentId },
+  });
+  const date = new Date(session.date).toLocaleDateString("es-HN");
+
+  await sendMail({
+    to: student.email,
+    subject: "Sesión cancelada",
+    html: templates.sessionCancelled({
+      userName: student.name,
+      date,
+      startTime: session.startTime,
+      refundAmount,
+    }),
   });
 
   return await prisma.session.findUnique({
