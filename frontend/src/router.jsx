@@ -3,6 +3,13 @@ import { useAuthStore } from "./store/authStore";
 import Landing from "./pages/public/Landing";
 import Login from "./pages/public/Login";
 import Register from "./pages/public/Register";
+import TutorSearch from "./pages/student/TutorSearch";
+
+import StudentDashboard from "./pages/student/Dashboard";
+import TutorDashboard from "./pages/tutor/Dashboard";
+import UniversityDashboard from "./pages/university/Dashboard";
+import AdminDashboard from "./pages/admin/Dashboard";
+import TutorProfile from "./pages/student/TutorProfile";
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, token } = useAuthStore();
@@ -29,6 +36,7 @@ export default function AppRouter() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+
       <Route
         path="/dashboard"
         element={
@@ -37,6 +45,59 @@ export default function AppRouter() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/student/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <StudentDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tutors"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <TutorSearch />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tutors/:id"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <TutorProfile />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/tutor/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["tutor"]}>
+            <TutorDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/university/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["university"]}>
+            <UniversityDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
