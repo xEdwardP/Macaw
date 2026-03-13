@@ -10,6 +10,7 @@ import TutorDashboard from "./pages/tutor/Dashboard";
 import UniversityDashboard from "./pages/university/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import TutorProfile from "./pages/student/TutorProfile";
+import BookSession from "./pages/student/BookSession";
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, token } = useAuthStore();
@@ -67,6 +68,14 @@ export default function AppRouter() {
         element={
           <ProtectedRoute allowedRoles={["student"]}>
             <TutorProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tutors/:id/book"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <BookSession />
           </ProtectedRoute>
         }
       />
