@@ -11,6 +11,8 @@ import UniversityDashboard from "./pages/university/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import TutorProfile from "./pages/student/TutorProfile";
 import BookSession from "./pages/student/BookSession";
+import MySessions from "./pages/student/MySessions";
+import MyWallet from "./pages/student/MyWallet";
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, token } = useAuthStore();
@@ -76,6 +78,22 @@ export default function AppRouter() {
         element={
           <ProtectedRoute allowedRoles={["student"]}>
             <BookSession />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/sessions"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <MySessions />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/wallet"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <MyWallet />
           </ProtectedRoute>
         }
       />
