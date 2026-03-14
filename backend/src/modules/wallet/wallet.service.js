@@ -78,14 +78,16 @@ const addSubsidy = async ({ studentId, amount, reason, universityId }) => {
       },
     });
 
-    await tx.subsidy.create({
-      data: {
-        universityId,
-        studentId,
-        amount: parseFloat(amount),
-        reason,
-      },
-    });
+    if (universityId) {
+      await tx.subsidy.create({
+        data: {
+          universityId,
+          studentId,
+          amount: parseFloat(amount),
+          reason,
+        },
+      });
+    }
 
     return updated;
   });

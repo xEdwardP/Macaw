@@ -16,6 +16,10 @@ import MyWallet from "./pages/student/MyWallet";
 import TutorMySessions from "./pages/tutor/MySessions";
 import TutorMyWallet from "./pages/tutor/MyWallet";
 import TutorMyProfile from "./pages/tutor/MyProfile";
+import UniversityStudents from "./pages/university/Students";
+import UniversitySubsidies from "./pages/university/Subsidies";
+import AdminUsers from "./pages/admin/Users";
+import AdminSessions from "./pages/admin/Sessions";
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, token } = useAuthStore();
@@ -152,6 +156,24 @@ export default function AppRouter() {
         }
       />
 
+      <Route
+        path="/university/students"
+        element={
+          <ProtectedRoute allowedRoles={["university", "admin"]}>
+            <UniversityStudents />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/university/subsidies"
+        element={
+          <ProtectedRoute allowedRoles={["university", "admin"]}>
+            <UniversitySubsidies />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Admin routes */}
 
       <Route
@@ -159,6 +181,23 @@ export default function AppRouter() {
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminUsers />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/sessions"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminSessions />
           </ProtectedRoute>
         }
       />
