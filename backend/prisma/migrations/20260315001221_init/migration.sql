@@ -23,6 +23,39 @@ CREATE TABLE "University" (
 );
 
 -- CreateTable
+CREATE TABLE "Faculty" (
+    "id" TEXT NOT NULL,
+    "universityId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Faculty_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Subject" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "quarter" INTEGER,
+    "credits" INTEGER,
+    "isGeneral" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Subject_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "FacultySubject" (
+    "id" TEXT NOT NULL,
+    "facultyId" TEXT NOT NULL,
+    "subjectId" TEXT NOT NULL,
+
+    CONSTRAINT "FacultySubject_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "universityId" TEXT,
@@ -32,7 +65,7 @@ CREATE TABLE "User" (
     "role" "Role" NOT NULL DEFAULT 'student',
     "avatar" TEXT,
     "career" TEXT,
-    "semester" INTEGER,
+    "quarter" INTEGER,
     "gpa" DOUBLE PRECISION,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -55,18 +88,6 @@ CREATE TABLE "TutorProfile" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "TutorProfile_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Subject" (
-    "id" TEXT NOT NULL,
-    "universityId" TEXT,
-    "name" TEXT NOT NULL,
-    "code" TEXT,
-    "area" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Subject_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -164,6 +185,15 @@ CREATE TABLE "Subsidy" (
 CREATE UNIQUE INDEX "University_domain_key" ON "University"("domain");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Faculty_universityId_code_key" ON "Faculty"("universityId", "code");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Subject_code_key" ON "Subject"("code");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "FacultySubject_facultyId_subjectId_key" ON "FacultySubject"("facultyId", "subjectId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
@@ -179,13 +209,19 @@ CREATE UNIQUE INDEX "Review_sessionId_key" ON "Review"("sessionId");
 CREATE UNIQUE INDEX "Wallet_userId_key" ON "Wallet"("userId");
 
 -- AddForeignKey
+ALTER TABLE "Faculty" ADD CONSTRAINT "Faculty_universityId_fkey" FOREIGN KEY ("universityId") REFERENCES "University"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "FacultySubject" ADD CONSTRAINT "FacultySubject_facultyId_fkey" FOREIGN KEY ("facultyId") REFERENCES "Faculty"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "FacultySubject" ADD CONSTRAINT "FacultySubject_subjectId_fkey" FOREIGN KEY ("subjectId") REFERENCES "Subject"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_universityId_fkey" FOREIGN KEY ("universityId") REFERENCES "University"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TutorProfile" ADD CONSTRAINT "TutorProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Subject" ADD CONSTRAINT "Subject_universityId_fkey" FOREIGN KEY ("universityId") REFERENCES "University"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "TutorSubject" ADD CONSTRAINT "TutorSubject_tutorProfileId_fkey" FOREIGN KEY ("tutorProfileId") REFERENCES "TutorProfile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

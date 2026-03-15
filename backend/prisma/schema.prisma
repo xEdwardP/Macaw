@@ -14,9 +14,48 @@ model University {
   logo           String?
   commissionRate Float    @default(0.10)
   createdAt      DateTime @default(now())
-  users          User[]
-  subjects       Subject[]
-  subsidies      Subsidy[]
+
+  users     User[]
+  faculties Faculty[]
+  subsidies Subsidy[]
+}
+
+model Faculty {
+  id           String   @id @default(cuid())
+  universityId String
+  name         String
+  code         String
+  createdAt    DateTime @default(now())
+
+  university University       @relation(fields: [universityId], references: [id])
+  subjects   FacultySubject[]
+
+  @@unique([universityId, code])
+}
+
+model Subject {
+  id         String   @id @default(cuid())
+  name       String
+  code       String   @unique
+  quarter   Int?
+  credits    Int?
+  isGeneral  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  faculties  FacultySubject[]
+  tutors     TutorSubject[]
+  sessions   Session[]
+}
+
+model FacultySubject {
+  id        String @id @default(cuid())
+  facultyId String
+  subjectId String
+
+  faculty Faculty @relation(fields: [facultyId], references: [id])
+  subject Subject @relation(fields: [subjectId], references: [id])
+
+  @@unique([facultyId, subjectId])
 }
 
 model User {
@@ -28,7 +67,7 @@ model User {
   role         Role     @default(student)
   avatar       String?
   career       String?
-  semester     Int?
+  quarter     Int?
   gpa          Float?
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
@@ -68,19 +107,6 @@ model TutorProfile {
   availability Availability[]
 }
 
-model Subject {
-  id           String   @id @default(cuid())
-  universityId String?
-  name         String
-  code         String?
-  area         String?
-  createdAt    DateTime @default(now())
-
-  university University?    @relation(fields: [universityId], references: [id])
-  tutors     TutorSubject[]
-  sessions   Session[]
-}
-
 model TutorSubject {
   id             String       @id @default(cuid())
   tutorProfileId String
@@ -100,7 +126,7 @@ enum SubjectLevel {
 }
 
 model Availability {
-  id             String       @id @default(cuid())
+  id             String @id @default(cuid())
   tutorProfileId String
   dayOfWeek      Int
   startTime      String
@@ -189,12 +215,12 @@ enum TransactionType {
 }
 
 model Subsidy {
-  id           String     @id @default(cuid())
+  id           String   @id @default(cuid())
   universityId String
   studentId    String
   amount       Float
   reason       String?
-  appliedAt    DateTime   @default(now())
+  appliedAt    DateTime @default(now())
 
   university University @relation(fields: [universityId], references: [id])
   student    User       @relation(fields: [studentId],    references: [id])

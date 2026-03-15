@@ -10,7 +10,7 @@ const getRecommendations = async (studentId) => {
     select: {
       name: true,
       career: true,
-      semester: true,
+      quarter: true,
       gpa: true,
       sessionsAsStudent: {
         where: { status: "completed" },
@@ -62,7 +62,7 @@ Eres un asistente de recomendación de tutores universitarios.
 Estudiante:
 - Nombre: ${student.name}
 - Carrera: ${student.career}
-- Semestre: ${student.semester}
+- Trimestre: ${student.quarter}
 - GPA: ${student.gpa}
 - Materias estudiadas recientemente: ${subjectsStudied}
 

@@ -117,7 +117,7 @@ const getStudents = async (user, { search }) => {
       name: true,
       email: true,
       career: true,
-      semester: true,
+      quarter: true,
       gpa: true,
       wallet: { select: { balance: true } },
       sessionsAsStudent: {

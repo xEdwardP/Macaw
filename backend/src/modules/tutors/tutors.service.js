@@ -6,7 +6,7 @@ const tutorSelect = {
   name: true,
   email: true,
   career: true,
-  semester: true,
+  quarter: true,
   avatar: true,
   university: { select: { id: true, name: true } },
   tutorProfile: {
