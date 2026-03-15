@@ -1,6 +1,7 @@
 const cron = require("node-cron");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const { getPlatformWallet } = require("../config/platform");
 
 const scheduleAutoConfirm = () => {
   cron.schedule("0 * * * *", async () => {
@@ -18,8 +19,9 @@ const scheduleAutoConfirm = () => {
     });
 
     for (const session of sessions) {
-      const commission = session.price * 0.1;
-      const tutorEarnings = session.price - commission;
+      const commission = parseFloat((session.price * 0.1).toFixed(2));
+      const tutorEarnings = parseFloat((session.price - commission).toFixed(2));
+      const platformWallet = await getPlatformWallet();
 
       await prisma.$transaction(async (tx) => {
         await tx.session.update({
@@ -44,6 +46,14 @@ const scheduleAutoConfirm = () => {
           },
         });
 
+        await tx.wallet.update({
+          where: { id: platformWallet.id },
+          data: {
+            balance: { increment: commission },
+            lifetimeEarned: { increment: commission },
+          },
+        });
+
         await tx.transaction.create({
           data: {
             walletId: studentWallet.id,
@@ -60,6 +70,16 @@ const scheduleAutoConfirm = () => {
             type: "released",
             amount: tutorEarnings,
             description: "Pago recibido (auto-confirmado)",
+            sessionId: session.id,
+          },
+        });
+
+        await tx.transaction.create({
+          data: {
+            walletId: platformWallet.id,
+            type: "commission",
+            amount: commission,
+            description: "Comisión sesión auto-confirmada",
             sessionId: session.id,
           },
         });

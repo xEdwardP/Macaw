@@ -23,9 +23,10 @@ cd macaw
 ### 2. Configurar variables de entorno
 ```bash
 cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
 ```
 
-Edita `backend/.env` con tus propias credenciales. Consulta la seccion **Variables de entorno** mas abajo para saber que valor va en cada campo.
+Edita ambos archivos con tus propias credenciales. Consulta la seccion **Variables de entorno** mas abajo para saber que valor va en cada campo.
 
 ### 3. Levantar la base de datos
 ```bash
@@ -84,6 +85,8 @@ npx prisma studio
 
 ## Variables de entorno
 
+### Backend (`backend/.env`)
+
 | Variable | Descripcion |
 |---|---|
 | `DATABASE_URL` | URL de conexion a PostgreSQL |
@@ -96,6 +99,16 @@ npx prisma studio
 | `MAIL_PORT` | Puerto SMTP. Para Mailtrap: `2525` |
 | `MAIL_USER` | Usuario SMTP de tu proveedor de email |
 | `MAIL_PASS` | Contrasena SMTP de tu proveedor de email |
+| `PAYPAL_CLIENT_ID` | Client ID de PayPal sandbox. Obtenlo en developer.paypal.com |
+| `PAYPAL_CLIENT_SECRET` | Client Secret de PayPal sandbox |
+| `PAYPAL_MODE` | Modo de PayPal. Usar `sandbox` para desarrollo |
+
+### Frontend (`frontend/.env`)
+
+| Variable | Descripcion |
+|---|---|
+| `VITE_API_URL` | URL del backend. Ejemplo: `http://localhost:3000/api` |
+| `VITE_PAYPAL_CLIENT_ID` | Client ID de PayPal sandbox (el mismo del backend) |
 
 ---
 
@@ -103,11 +116,14 @@ npx prisma studio
 
 Estas credenciales se crean automaticamente al correr el seed.
 
-| Rol | Email | Contrasena |
-|---|---|---|
-| Admin | admin@macaw.app | password123 |
-| Estudiante | maria@unicah.edu | password123 |
-| Tutor | luis@unicah.edu | password123 |
+| Rol | Email | Contrasena | Descripcion |
+|---|---|---|---|
+| Admin | admin@macaw.app | password123 | Administrador de la plataforma Macaw |
+| Coordinador | coordinador@unicah.edu | password123 | Coordinador Academico de UNICAH |
+| Estudiante | sponce@unicah.edu | password123 | Estudiante de prueba |
+| Tutor | epineda@unicah.edu | password123 | Tutor de prueba |
+
+> La cuenta `platform@macaw.app` es interna y acumula las comisiones de la plataforma. No se usa para login.
 
 ---
 
@@ -115,9 +131,10 @@ Estas credenciales se crean automaticamente al correr el seed.
 
 | Capa | Tecnologia |
 |---|---|
-| Frontend | React 18 + Vite + Tailwind v4 |
-| Backend | Node.js + Express |
+| Frontend | React 18 + Vite + Tailwind v4 + Framer Motion |
+| Backend | Node.js + Express + Socket.io |
 | Base de datos | PostgreSQL + Prisma 6 |
+| Pagos | PayPal REST API (sandbox) |
 | IA | OpenAI gpt-4o-mini |
 | Videollamadas | Jitsi Meet |
 | Emails | Nodemailer + Mailtrap |
@@ -125,17 +142,62 @@ Estas credenciales se crean automaticamente al correr el seed.
 
 ---
 
+## Funcionalidades principales
+
+| Modulo | Descripcion |
+|---|---|
+| Autenticacion | Registro, login y JWT por rol |
+| Tutores | Perfil, materias, disponibilidad y busqueda por facultad |
+| Sesiones | Reserva, confirmacion, videollamada con Jitsi |
+| Wallet | Creditos internos, escrow y comisiones |
+| Pagos | Recarga con PayPal sandbox |
+| Disputas | Reporte de problemas y resolucion por admin |
+| Reseñas | Calificacion post-sesion con recalculo automatico |
+| Emails | Notificaciones y recordatorios automaticos |
+| IA | Recomendaciones de tutores y resumen de reseñas |
+| Universidad | Analytics, subsidios y gestion de facultades |
+
+---
+
 ## Estructura del proyecto
 ```
 macaw/
-├── frontend/          # React + Vite
-├── backend/           # Node.js + Express
-│   ├── prisma/        # Schema y seed
+├── frontend/                 # React + Vite
 │   └── src/
-│       ├── modules/   # Auth, tutores, sesiones, wallet, etc.
-│       ├── middlewares/
-│       ├── utils/
-│       ├── config/
-│       └── jobs/
+│       ├── components/       # Componentes reutilizables
+│       ├── pages/            # Paginas por rol (student, tutor, university, admin)
+│       ├── services/         # Llamadas a la API
+│       ├── store/            # Zustand (auth)
+│       └── hooks/            # Custom hooks
+├── backend/                  # Node.js + Express
+│   ├── prisma/               # Schema, migraciones y seed
+│   └── src/
+│       ├── modules/          # Auth, tutores, sesiones, wallet, reseñas, IA, universidad
+│       ├── middlewares/      # Auth y roles
+│       ├── utils/            # JWT, apiResponse, emailTemplates
+│       ├── config/           # PayPal, platform wallet, mailer
+│       └── jobs/             # Recordatorios y auto-confirmacion
 └── docker-compose.yml
+```
+
+---
+
+## Flujo de pagos
+```
+1. Estudiante recarga wallet con PayPal
+2. Reserva sesion → creditos se congelan
+3. Tutor confirma y da la tutoria
+4. Estudiante confirma sesion recibida
+   → 90% va al tutor
+   → 10% va a la wallet de la plataforma
+5. Tutor solicita retiro → admin aprueba
+```
+
+---
+
+## Politica de cancelacion
+```
+Cancelacion con mas de 24hrs → reembolso 100% al estudiante
+Cancelacion con menos de 24hrs → reembolso 50% al estudiante
+                               → 50% al tutor como compensacion
 ```

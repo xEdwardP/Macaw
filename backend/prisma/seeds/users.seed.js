@@ -635,6 +635,41 @@ async function seedUsers(universityId) {
     create: { userId: admin.id },
   });
 
+  const platform = await prisma.user.upsert({
+    where: { email: "platform@macaw.app" },
+    update: {},
+    create: {
+      name: "Macaw Platform",
+      email: "platform@macaw.app",
+      password: await bcrypt.hash("platform_secret_123", 12),
+      role: "admin",
+    },
+  });
+  await prisma.wallet.upsert({
+    where: { userId: platform.id },
+    update: {},
+    create: { userId: platform.id, balance: 0 },
+  });
+  console.log("Platform wallet created");
+
+  const coordinator = await prisma.user.upsert({
+    where: { email: "coordinador@unicah.edu" },
+    update: {},
+    create: {
+      name: "Coordinador Académico UNICAH",
+      email: "coordinador@unicah.edu",
+      password,
+      role: "university",
+      universityId,
+    },
+  });
+  await prisma.wallet.upsert({
+    where: { userId: coordinator.id },
+    update: {},
+    create: { userId: coordinator.id },
+  });
+  console.log("Coordinator created");
+
   for (const s of STUDENTS_DATA) {
     const student = await prisma.user.upsert({
       where: { email: s.email },

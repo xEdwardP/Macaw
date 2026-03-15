@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { sendMail } = require("../../config/mailer");
 const templates = require("../../utils/emailTemplates");
+const { getPlatformWallet } = require('../../config/platform');
 
 const sessionInclude = {
   student: { select: { id: true, name: true, email: true, avatar: true } },
@@ -302,8 +303,10 @@ const studentConfirm = async (sessionId, studentId) => {
   if (session.status !== "pending_confirmation")
     throw new Error("La sesión no está pendiente de confirmación");
 
-  const commission = session.price * 0.1;
-  const tutorEarnings = session.price - commission;
+  const commission = parseFloat((session.price * 0.1).toFixed(2));
+  const tutorEarnings = parseFloat((session.price - commission).toFixed(2));
+
+  const platformWallet = await getPlatformWallet();
 
   await prisma.$transaction(async (tx) => {
     await tx.session.update({
@@ -328,6 +331,14 @@ const studentConfirm = async (sessionId, studentId) => {
       },
     });
 
+    await tx.wallet.update({
+      where: { id: platformWallet.id },
+      data: {
+        balance: { increment: commission },
+        lifetimeEarned: { increment: commission },
+      },
+    });
+
     await tx.transaction.create({
       data: {
         walletId: studentWallet.id,
@@ -344,6 +355,16 @@ const studentConfirm = async (sessionId, studentId) => {
         type: "released",
         amount: tutorEarnings,
         description: "Pago recibido (10% comisión deducida)",
+        sessionId,
+      },
+    });
+
+    await tx.transaction.create({
+      data: {
+        walletId: platformWallet.id,
+        type: "commission",
+        amount: commission,
+        description: `Comisión sesión completada`,
         sessionId,
       },
     });

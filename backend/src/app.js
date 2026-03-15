@@ -46,6 +46,7 @@ app.use(
   "/api/universities",
   require("./modules/universities/universities.routes"),
 );
+app.use('/api/paypal', require('./modules/wallet/paypal.routes'));
 
 // Health check
 app.get("/api/health", (req, res) => {

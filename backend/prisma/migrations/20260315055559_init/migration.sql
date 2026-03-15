@@ -5,7 +5,7 @@ CREATE TYPE "Role" AS ENUM ('student', 'tutor', 'university', 'admin');
 CREATE TYPE "SubjectLevel" AS ENUM ('basic', 'intermediate', 'advanced');
 
 -- CreateEnum
-CREATE TYPE "SessionStatus" AS ENUM ('pending', 'confirmed', 'completed', 'cancelled');
+CREATE TYPE "SessionStatus" AS ENUM ('pending', 'confirmed', 'pending_confirmation', 'disputed', 'completed', 'cancelled');
 
 -- CreateEnum
 CREATE TYPE "TransactionType" AS ENUM ('recharge', 'frozen', 'released', 'commission', 'subsidy', 'withdrawal', 'refund');

@@ -32,5 +32,11 @@ router.get(
   authorize("admin", "university"),
   ctrl.getSubsidies,
 );
+router.get(
+  "/platform-earnings",
+  authenticate,
+  authorize("admin"),
+  ctrl.getPlatformEarnings,
+);
 
 module.exports = router;

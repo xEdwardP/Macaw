@@ -64,6 +64,15 @@ const getSubjectsByFaculty = async (req, res) => {
   }
 };
 
+const getPlatformEarnings = async (req, res) => {
+  try {
+    const result = await service.getPlatformEarnings();
+    return response.ok(res, result);
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
 module.exports = {
   getSubjects,
   getFaculties,
@@ -72,4 +81,5 @@ module.exports = {
   getAnalytics,
   getStudents,
   getSubsidies,
+  getPlatformEarnings,
 };

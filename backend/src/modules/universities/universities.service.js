@@ -167,6 +167,30 @@ const getSubjectsByFaculty = async (facultyId) => {
   return faculty.subjects.map((fs) => fs.subject);
 };
 
+const getPlatformEarnings = async () => {
+  const platform = await prisma.user.findUnique({
+    where: { email: "platform@macaw.app" },
+    include: {
+      wallet: {
+        include: {
+          transactions: {
+            orderBy: { createdAt: "desc" },
+            take: 20,
+          },
+        },
+      },
+    },
+  });
+
+  if (!platform?.wallet) throw new Error("Platform wallet not found");
+
+  return {
+    balance: platform.wallet.balance,
+    lifetimeEarned: platform.wallet.lifetimeEarned,
+    transactions: platform.wallet.transactions,
+  };
+};
+
 module.exports = {
   getSubjects,
   getFaculties,
@@ -175,4 +199,5 @@ module.exports = {
   getAnalytics,
   getStudents,
   getSubsidies,
+  getPlatformEarnings,
 };

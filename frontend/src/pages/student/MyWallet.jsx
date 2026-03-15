@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   Wallet,
@@ -6,8 +7,10 @@ import {
   ArrowDownCircle,
   Clock,
   TrendingUp,
+  Plus,
 } from "lucide-react";
 import { walletService } from "../../services/wallet.service";
+import RechargeModal from "../../components/wallet/RechargeModal";
 
 const TYPE_CONFIG = {
   recharge: {
@@ -29,7 +32,7 @@ const TYPE_CONFIG = {
     icon: ArrowUpCircle,
   },
   commission: {
-    label: "Comisión",
+    label: "Comision",
     color: "text-gray-600",
     bg: "bg-gray-100",
     icon: ArrowDownCircle,
@@ -55,6 +58,9 @@ const TYPE_CONFIG = {
 };
 
 export default function MyWallet() {
+  const [showRecharge, setShowRecharge] = useState(false);
+  const queryClient = useQueryClient();
+
   const { data: wallet, isLoading: loadingWallet } = useQuery({
     queryKey: ["wallet"],
     queryFn: () => walletService.getMyWallet().then((r) => r.data.data),
@@ -71,7 +77,17 @@ export default function MyWallet() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-6 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Mi Wallet</h1>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-3xl font-bold text-gray-900">Mi Wallet</h1>
+          <button
+            onClick={() => setShowRecharge(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-600
+            hover:bg-orange-700 text-white rounded-xl transition-colors font-medium text-sm"
+          >
+            <Plus size={16} />
+            Recargar
+          </button>
+        </div>
         <p className="text-gray-500 mb-8">Saldo y historial de transacciones</p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -141,7 +157,7 @@ export default function MyWallet() {
             </div>
           ) : transactions.length === 0 ? (
             <p className="text-center text-gray-400 py-8">
-              No hay transacciones aún
+              No hay transacciones aun
             </p>
           ) : (
             <div className="space-y-4">
@@ -198,6 +214,16 @@ export default function MyWallet() {
           )}
         </div>
       </div>
+
+      {showRecharge && (
+        <RechargeModal
+          onClose={() => setShowRecharge(false)}
+          onSuccess={() => {
+            queryClient.invalidateQueries(["wallet"]);
+            queryClient.invalidateQueries(["transactions"]);
+          }}
+        />
+      )}
     </div>
   );
 }

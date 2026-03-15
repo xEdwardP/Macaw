@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+.paypal-overlay-context {
+  z-index: 99999 !important;
+}
+
+iframe[name^="__zoid"] {
+  z-index: 99999 !important;
+}
