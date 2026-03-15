@@ -142,8 +142,35 @@ const getSubsidies = async (user) => {
   });
 };
 
+const getFaculties = async ({ universityId }) => {
+  const where = universityId ? { universityId } : {};
+  return await prisma.faculty.findMany({
+    where,
+    orderBy: { name: "asc" },
+    include: {
+      _count: { select: { subjects: true } },
+    },
+  });
+};
+
+const getSubjectsByFaculty = async (facultyId) => {
+  const faculty = await prisma.faculty.findUnique({
+    where: { id: facultyId },
+    include: {
+      subjects: {
+        include: { subject: true },
+        orderBy: { subject: { quarter: "asc" } },
+      },
+    },
+  });
+  if (!faculty) throw new Error("Facultad no encontrada");
+  return faculty.subjects.map((fs) => fs.subject);
+};
+
 module.exports = {
   getSubjects,
+  getFaculties,
+  getSubjectsByFaculty,
   createSubject,
   getAnalytics,
   getStudents,

@@ -13,7 +13,11 @@ const tutorSelect = {
     include: {
       subjects: {
         include: {
-          subject: true,
+          subject: {
+            include: {
+              faculties: true,
+            },
+          },
         },
       },
       availability: true,
@@ -21,39 +25,52 @@ const tutorSelect = {
   },
 };
 
-const getAll = async ({ search, minRating, maxRate }) => {
+const getAll = async ({ search, minRating, maxRate, area, facultyId }) => {
   const where = {
-    role:     'tutor',
+    role: "tutor",
     isActive: true,
-  }
+  };
 
   if (search) {
     where.OR = [
-      { name:   { contains: search, mode: 'insensitive' } },
-      { career: { contains: search, mode: 'insensitive' } },
-    ]
+      { name: { contains: search, mode: "insensitive" } },
+      { career: { contains: search, mode: "insensitive" } },
+    ];
   }
 
   const tutors = await prisma.user.findMany({
     where,
     select: tutorSelect,
-    orderBy: { createdAt: 'desc' }
-  })
+    orderBy: { createdAt: "desc" },
+  });
 
-  let result = tutors.filter(t => t.tutorProfile !== null)
+  let result = tutors.filter((t) => t.tutorProfile !== null);
 
   if (minRating) {
-    result = result.filter(t => t.tutorProfile.averageRating >= parseFloat(minRating))
+    result = result.filter(
+      (t) => t.tutorProfile.averageRating >= parseFloat(minRating),
+    );
   }
 
   if (maxRate) {
-    result = result.filter(t => t.tutorProfile.hourlyRate <= parseFloat(maxRate))
+    result = result.filter(
+      (t) => t.tutorProfile.hourlyRate <= parseFloat(maxRate),
+    );
   }
 
-  result.sort((a, b) => b.tutorProfile.averageRating - a.tutorProfile.averageRating)
+  if (facultyId) {
+    result = result.filter((t) =>
+      t.tutorProfile.subjects.some((s) =>
+        s.subject.faculties.some((f) => f.facultyId === facultyId),
+      ),
+    );
+  }
 
-  return result
-}
+  result.sort(
+    (a, b) => b.tutorProfile.averageRating - a.tutorProfile.averageRating,
+  );
+  return result;
+};
 
 const getOne = async (id) => {
   const tutor = await prisma.user.findUnique({
@@ -112,36 +129,44 @@ const removeSubject = async (userId, subjectId) => {
 
 const getAvailability = async (tutorId) => {
   const profile = await prisma.tutorProfile.findUnique({
-    where:   { userId: tutorId },
-    include: { availability: { orderBy: { dayOfWeek: 'asc' } } }
-  })
-  if (!profile) throw new Error('Tutor no encontrado')
-  return profile.availability
-}
+    where: { userId: tutorId },
+    include: { availability: { orderBy: { dayOfWeek: "asc" } } },
+  });
+  if (!profile) throw new Error("Tutor no encontrado");
+  return profile.availability;
+};
 
 const setAvailability = async (userId, slots) => {
-  const profile = await prisma.tutorProfile.findUnique({ where: { userId } })
-  if (!profile) throw new Error('Perfil de tutor no encontrado')
+  const profile = await prisma.tutorProfile.findUnique({ where: { userId } });
+  if (!profile) throw new Error("Perfil de tutor no encontrado");
 
   await prisma.availability.deleteMany({
-    where: { tutorProfileId: profile.id }
-  })
+    where: { tutorProfileId: profile.id },
+  });
 
-  if (!slots || slots.length === 0) return []
+  if (!slots || slots.length === 0) return [];
 
   const created = await prisma.availability.createMany({
-    data: slots.map(s => ({
+    data: slots.map((s) => ({
       tutorProfileId: profile.id,
-      dayOfWeek:      s.dayOfWeek,
-      startTime:      s.startTime,
-      endTime:        s.endTime,
-    }))
-  })
+      dayOfWeek: s.dayOfWeek,
+      startTime: s.startTime,
+      endTime: s.endTime,
+    })),
+  });
 
   return await prisma.availability.findMany({
-    where:   { tutorProfileId: profile.id },
-    orderBy: { dayOfWeek: 'asc' }
-  })
-}
+    where: { tutorProfileId: profile.id },
+    orderBy: { dayOfWeek: "asc" },
+  });
+};
 
-module.exports = { getAll, getOne, updateProfile, addSubject, removeSubject, getAvailability, setAvailability }
+module.exports = {
+  getAll,
+  getOne,
+  updateProfile,
+  addSubject,
+  removeSubject,
+  getAvailability,
+  setAvailability,
+};

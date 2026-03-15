@@ -46,8 +46,28 @@ const getSubsidies = async (req, res) => {
   }
 };
 
+const getFaculties = async (req, res) => {
+  try {
+    const result = await service.getFaculties(req.query);
+    return response.ok(res, result);
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const getSubjectsByFaculty = async (req, res) => {
+  try {
+    const result = await service.getSubjectsByFaculty(req.params.id);
+    return response.ok(res, result);
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
 module.exports = {
   getSubjects,
+  getFaculties,
+  getSubjectsByFaculty,
   createSubject,
   getAnalytics,
   getStudents,

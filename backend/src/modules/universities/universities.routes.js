@@ -6,6 +6,8 @@ const {
 const ctrl = require("./universities.controller");
 
 router.get("/subjects", ctrl.getSubjects);
+router.get("/faculties", ctrl.getFaculties);
+router.get("/faculties/:id/subjects", ctrl.getSubjectsByFaculty);
 router.post(
   "/subjects",
   authenticate,
