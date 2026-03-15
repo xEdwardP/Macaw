@@ -1,15 +1,20 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Calendar, Clock, X } from "lucide-react";
+import { Calendar, Clock, X, AlertTriangle } from "lucide-react";
 import toast from "react-hot-toast";
 import { sessionsService } from "../../services/sessions.service";
 
 const STATUS_LABELS = {
   pending: { label: "Pendiente", color: "bg-yellow-100 text-yellow-700" },
   confirmed: { label: "Confirmada", color: "bg-blue-100 text-blue-700" },
+  pending_confirmation: {
+    label: "Pendiente de confirmar",
+    color: "bg-purple-100 text-purple-700",
+  },
+  disputed: { label: "En disputa", color: "bg-red-100 text-red-700" },
   completed: { label: "Completada", color: "bg-green-100 text-green-700" },
-  cancelled: { label: "Cancelada", color: "bg-red-100 text-red-700" },
+  cancelled: { label: "Cancelada", color: "bg-gray-100 text-gray-700" },
 };
 
 export default function AdminSessions() {
@@ -31,9 +36,21 @@ export default function AdminSessions() {
       toast.error(err.response?.data?.message || "Error al cancelar"),
   });
 
+  const { mutate: resolveDispute } = useMutation({
+    mutationFn: ({ id, favorOf }) => sessionsService.resolve(id, favorOf),
+    onSuccess: () => {
+      toast.success("Disputa resuelta");
+      queryClient.invalidateQueries(["admin-sessions"]);
+    },
+    onError: (err) =>
+      toast.error(err.response?.data?.message || "Error al resolver"),
+  });
+
   const sessions = data || [];
   const filtered =
     filter === "all" ? sessions : sessions.filter((s) => s.status === filter);
+
+  const disputedCount = sessions.filter((s) => s.status === "disputed").length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -43,7 +60,23 @@ export default function AdminSessions() {
           Todas las sesiones de la plataforma
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {disputedCount > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-center gap-3">
+            <AlertTriangle className="text-red-500 flex-shrink-0" size={20} />
+            <p className="text-sm text-red-700 font-medium">
+              Tienes {disputedCount} disputa{disputedCount > 1 ? "s" : ""}{" "}
+              pendiente{disputedCount > 1 ? "s" : ""} de resolver.
+            </p>
+            <button
+              onClick={() => setFilter("disputed")}
+              className="ml-auto text-xs text-red-600 underline hover:text-red-800"
+            >
+              Ver disputas
+            </button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           {[
             { label: "Total", value: sessions.length, color: "text-gray-900" },
             {
@@ -59,6 +92,11 @@ export default function AdminSessions() {
             {
               label: "Canceladas",
               value: sessions.filter((s) => s.status === "cancelled").length,
+              color: "text-gray-600",
+            },
+            {
+              label: "En disputa",
+              value: disputedCount,
               color: "text-red-600",
             },
           ].map((stat) => (
@@ -79,6 +117,8 @@ export default function AdminSessions() {
             { key: "all", label: "Todas" },
             { key: "pending", label: "Pendientes" },
             { key: "confirmed", label: "Confirmadas" },
+            { key: "pending_confirmation", label: "Por confirmar" },
+            { key: "disputed", label: "En disputa" },
             { key: "completed", label: "Completadas" },
             { key: "cancelled", label: "Canceladas" },
           ].map((f) => (
@@ -93,6 +133,11 @@ export default function AdminSessions() {
                 }`}
             >
               {f.label}
+              {f.key === "disputed" && disputedCount > 0 && (
+                <span className="ml-1.5 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                  {disputedCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -137,7 +182,12 @@ export default function AdminSessions() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                  className={`bg-white rounded-xl border shadow-sm p-5
+                    ${
+                      session.status === "disputed"
+                        ? "border-red-200 bg-red-50/30"
+                        : "border-gray-100"
+                    }`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -154,6 +204,11 @@ export default function AdminSessions() {
                       <p className="text-sm text-gray-500">
                         {session.student.name} → {session.tutor.name}
                       </p>
+                      {session.status === "disputed" && session.notes && (
+                        <p className="text-xs text-red-600 mt-1 bg-red-50 px-2 py-1 rounded">
+                          Motivo: {session.notes}
+                        </p>
+                      )}
                     </div>
                     <span className="text-orange-600 font-semibold">
                       ${session.price}
@@ -184,6 +239,50 @@ export default function AdminSessions() {
                         <X size={14} />
                         Cancelar sesión
                       </button>
+                    </div>
+                  )}
+
+                  {session.status === "disputed" && (
+                    <div className="mt-3 pt-3 border-t border-red-100">
+                      <p className="text-xs text-red-600 font-medium mb-2">
+                        Resolver disputa:
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            if (
+                              confirm(
+                                "¿Dar razón al estudiante? Se hará un reembolso completo.",
+                              )
+                            )
+                              resolveDispute({
+                                id: session.id,
+                                favorOf: "student",
+                              });
+                          }}
+                          className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700
+                          text-white text-xs rounded-lg transition-colors"
+                        >
+                          Favor estudiante
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (
+                              confirm(
+                                "¿Dar razón al tutor? Se liberará el pago al tutor.",
+                              )
+                            )
+                              resolveDispute({
+                                id: session.id,
+                                favorOf: "tutor",
+                              });
+                          }}
+                          className="flex-1 py-1.5 bg-green-600 hover:bg-green-700
+                          text-white text-xs rounded-lg transition-colors"
+                        >
+                          Favor tutor
+                        </button>
+                      </div>
                     </div>
                   )}
                 </motion.div>

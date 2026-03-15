@@ -8,7 +8,7 @@ import {
   Star,
   X,
   CheckCircle,
-  AlertCircle,
+  AlertTriangle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { sessionsService } from "../../services/sessions.service";
@@ -17,8 +17,13 @@ import { reviewsService } from "../../services/reviews.service";
 const STATUS_LABELS = {
   pending: { label: "Pendiente", color: "bg-yellow-100 text-yellow-700" },
   confirmed: { label: "Confirmada", color: "bg-blue-100 text-blue-700" },
+  pending_confirmation: {
+    label: "Pendiente de confirmar",
+    color: "bg-purple-100 text-purple-700",
+  },
+  disputed: { label: "En disputa", color: "bg-red-100 text-red-700" },
   completed: { label: "Completada", color: "bg-green-100 text-green-700" },
-  cancelled: { label: "Cancelada", color: "bg-red-100 text-red-700" },
+  cancelled: { label: "Cancelada", color: "bg-gray-100 text-gray-700" },
 };
 
 function ReviewModal({ session, onClose, onSubmit, isPending }) {
@@ -64,18 +69,76 @@ function ReviewModal({ session, onClose, onSubmit, isPending }) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-2 border border-gray-300 text-gray-700
-            rounded-lg hover:bg-gray-50 transition-colors text-sm"
+            className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
           >
             Cancelar
           </button>
           <button
             onClick={() => onSubmit({ sessionId: session.id, rating, comment })}
             disabled={isPending}
-            className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white
-            rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
           >
             {isPending ? "Enviando..." : "Enviar reseña"}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function DisputeModal({ session, onClose, onSubmit, isPending }) {
+  const [reason, setReason] = useState("");
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-xl p-6 w-full max-w-md"
+      >
+        <div className="flex items-center gap-3 mb-1">
+          <AlertTriangle className="text-red-500" size={22} />
+          <h3 className="text-lg font-bold text-gray-900">Reportar problema</h3>
+        </div>
+        <p className="text-sm text-gray-500 mb-6">
+          Sesión con {session.tutor.name}
+        </p>
+
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+          <p className="text-xs text-red-700">
+            El administrador revisará tu caso y tomará una decisión. Los
+            créditos permanecerán congelados hasta que se resuelva la disputa.
+          </p>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Describe el problema
+          </label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Ej: El tutor no se conectó a la videollamada, la sesión no se realizó..."
+            rows={4}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg
+            focus:outline-none focus:ring-2 focus:ring-red-500 resize-none text-sm"
+          />
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onSubmit(session.id, reason)}
+            disabled={isPending || !reason.trim()}
+            className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg
+            transition-colors text-sm disabled:opacity-50"
+          >
+            {isPending ? "Enviando..." : "Enviar reporte"}
           </button>
         </div>
       </motion.div>
@@ -86,6 +149,7 @@ function ReviewModal({ session, onClose, onSubmit, isPending }) {
 export default function MySessions() {
   const [filter, setFilter] = useState("all");
   const [reviewSession, setReviewSession] = useState(null);
+  const [disputeSession, setDisputeSession] = useState(null);
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -115,6 +179,28 @@ export default function MySessions() {
       toast.error(err.response?.data?.message || "Error al enviar reseña"),
   });
 
+  const { mutate: studentConfirm, isPending: isConfirming } = useMutation({
+    mutationFn: (id) => sessionsService.studentConfirm(id),
+    onSuccess: () => {
+      toast.success("Sesión confirmada, pago liberado al tutor");
+      queryClient.invalidateQueries(["sessions"]);
+      queryClient.invalidateQueries(["wallet"]);
+    },
+    onError: (err) =>
+      toast.error(err.response?.data?.message || "Error al confirmar"),
+  });
+
+  const { mutate: submitDispute, isPending: isDisputing } = useMutation({
+    mutationFn: ({ id, reason }) => sessionsService.dispute(id, reason),
+    onSuccess: () => {
+      toast.success("Reporte enviado al administrador");
+      setDisputeSession(null);
+      queryClient.invalidateQueries(["sessions"]);
+    },
+    onError: (err) =>
+      toast.error(err.response?.data?.message || "Error al enviar reporte"),
+  });
+
   const sessions = data || [];
   const filtered =
     filter === "all" ? sessions : sessions.filter((s) => s.status === filter);
@@ -130,6 +216,8 @@ export default function MySessions() {
             { key: "all", label: "Todas" },
             { key: "pending", label: "Pendientes" },
             { key: "confirmed", label: "Confirmadas" },
+            { key: "pending_confirmation", label: "Por confirmar" },
+            { key: "disputed", label: "En disputa" },
             { key: "completed", label: "Completadas" },
             { key: "cancelled", label: "Canceladas" },
           ].map((f) => (
@@ -225,7 +313,7 @@ export default function MySessions() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3 pt-4 border-t border-gray-100">
+                  <div className="flex gap-3 pt-4 border-t border-gray-100 flex-wrap">
                     {session.status === "confirmed" && session.meetingUrl && (
                       <a
                         href={session.meetingUrl}
@@ -236,6 +324,45 @@ export default function MySessions() {
                         <Video size={14} />
                         Unirse a la sesion
                       </a>
+                    )}
+
+                    {session.status === "pending_confirmation" && (
+                      <>
+                        <button
+                          onClick={() => studentConfirm(session.id)}
+                          disabled={isConfirming}
+                          className="flex items-center gap-2 px-4 py-2 bg-purple-600
+                          hover:bg-purple-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+                        >
+                          <CheckCircle size={14} />
+                          Confirmar sesión recibida
+                        </button>
+                        <button
+                          onClick={() => setDisputeSession(session)}
+                          className="flex items-center gap-2 px-4 py-2 border border-red-200
+                          text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
+                        >
+                          <AlertTriangle size={14} />
+                          Reportar problema
+                        </button>
+                        <div
+                          className="w-full flex items-center gap-2 text-xs text-amber-600 bg-amber-50
+                        border border-amber-200 px-3 py-2 rounded-lg"
+                        >
+                          Si no confirmas en 24hrs el pago se liberará
+                          automáticamente
+                        </div>
+                      </>
+                    )}
+
+                    {session.status === "disputed" && (
+                      <div
+                        className="flex items-center gap-2 text-red-600 text-sm bg-red-50
+                      border border-red-200 px-3 py-2 rounded-lg"
+                      >
+                        <AlertTriangle size={14} />
+                        Disputa en revisión por el administrador
+                      </div>
                     )}
 
                     {["pending", "confirmed"].includes(session.status) && (
@@ -283,6 +410,15 @@ export default function MySessions() {
           onClose={() => setReviewSession(null)}
           onSubmit={submitReview}
           isPending={isReviewing}
+        />
+      )}
+
+      {disputeSession && (
+        <DisputeModal
+          session={disputeSession}
+          onClose={() => setDisputeSession(null)}
+          onSubmit={(id, reason) => submitDispute({ id, reason })}
+          isPending={isDisputing}
         />
       )}
     </div>

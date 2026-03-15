@@ -152,7 +152,10 @@ const confirm = async (sessionId, tutorId) => {
 const cancel = async (sessionId, user) => {
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
-    include: { student: { include: { wallet: true } } },
+    include: {
+      student: { include: { wallet: true } },
+      tutor: { include: { wallet: true } },
+    },
   });
 
   if (!session) throw new Error("Sesión no encontrada");
@@ -164,13 +167,16 @@ const cancel = async (sessionId, user) => {
   )
     throw new Error("No autorizado");
 
-  if (["completed", "cancelled"].includes(session.status))
+  if (["completed", "cancelled", "disputed"].includes(session.status))
     throw new Error("La sesión no se puede cancelar");
 
   const hoursUntilSession =
     (new Date(session.date) - new Date()) / (1000 * 60 * 60);
-  const refundAmount =
-    hoursUntilSession >= 24 ? session.price : session.price * 0.5;
+  const isLateCancellation =
+    hoursUntilSession < 24 && session.status === "confirmed";
+
+  const refundAmount = isLateCancellation ? session.price * 0.5 : session.price;
+  const tutorCompensation = isLateCancellation ? session.price * 0.5 : 0;
 
   await prisma.$transaction(async (tx) => {
     await tx.session.update({
@@ -181,7 +187,6 @@ const cancel = async (sessionId, user) => {
     const studentWallet = await tx.wallet.findUnique({
       where: { userId: session.studentId },
     });
-
     await tx.wallet.update({
       where: { userId: session.studentId },
       data: {
@@ -195,10 +200,34 @@ const cancel = async (sessionId, user) => {
         walletId: studentWallet.id,
         type: "refund",
         amount: refundAmount,
-        description: "Reembolso por cancelación de sesión",
+        description: isLateCancellation
+          ? "Reembolso del 50% por cancelación con menos de 24hrs"
+          : "Reembolso completo por cancelación",
         sessionId,
       },
     });
+
+    if (isLateCancellation) {
+      const tutorWallet = session.tutor.wallet;
+      await tx.wallet.update({
+        where: { userId: session.tutorId },
+        data: {
+          balance: { increment: tutorCompensation },
+          lifetimeEarned: { increment: tutorCompensation },
+        },
+      });
+
+      await tx.transaction.create({
+        data: {
+          walletId: tutorWallet.id,
+          type: "released",
+          amount: tutorCompensation,
+          description:
+            "Compensación del 50% por cancelación tardía del estudiante",
+          sessionId,
+        },
+      });
+    }
   });
 
   const student = await prisma.user.findUnique({
@@ -234,6 +263,45 @@ const complete = async (sessionId, tutorId) => {
   if (session.status !== "confirmed")
     throw new Error("La sesión no está confirmada");
 
+  await prisma.session.update({
+    where: { id: sessionId },
+    data: { status: "pending_confirmation" },
+  });
+
+  const student = await prisma.user.findUnique({
+    where: { id: session.studentId },
+  });
+  const tutor = await prisma.user.findUnique({ where: { id: tutorId } });
+  const date = new Date(session.date).toLocaleDateString("es-HN");
+
+  await sendMail({
+    to: student.email,
+    subject: "Confirma tu sesión de tutoría",
+    html: templates.sessionPendingConfirmation({
+      studentName: student.name,
+      tutorName: tutor.name,
+      date,
+      startTime: session.startTime,
+    }),
+  });
+
+  return await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: sessionInclude,
+  });
+};
+
+const studentConfirm = async (sessionId, studentId) => {
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: { tutor: { include: { wallet: true } } },
+  });
+
+  if (!session) throw new Error("Sesión no encontrada");
+  if (session.studentId !== studentId) throw new Error("No autorizado");
+  if (session.status !== "pending_confirmation")
+    throw new Error("La sesión no está pendiente de confirmación");
+
   const commission = session.price * 0.1;
   const tutorEarnings = session.price - commission;
 
@@ -244,16 +312,16 @@ const complete = async (sessionId, tutorId) => {
     });
 
     const studentWallet = await tx.wallet.findUnique({
-      where: { userId: session.studentId },
+      where: { userId: studentId },
     });
     await tx.wallet.update({
-      where: { userId: session.studentId },
+      where: { userId: studentId },
       data: { frozen: { decrement: session.price } },
     });
 
     const tutorWallet = session.tutor.wallet;
     await tx.wallet.update({
-      where: { userId: tutorId },
+      where: { userId: session.tutorId },
       data: {
         balance: { increment: tutorEarnings },
         lifetimeEarned: { increment: tutorEarnings },
@@ -275,13 +343,13 @@ const complete = async (sessionId, tutorId) => {
         walletId: tutorWallet.id,
         type: "released",
         amount: tutorEarnings,
-        description: `Pago recibido (10% comisión deducida)`,
+        description: "Pago recibido (10% comisión deducida)",
         sessionId,
       },
     });
 
     await tx.tutorProfile.update({
-      where: { userId: tutorId },
+      where: { userId: session.tutorId },
       data: { totalSessions: { increment: 1 } },
     });
   });
@@ -292,4 +360,180 @@ const complete = async (sessionId, tutorId) => {
   });
 };
 
-module.exports = { getAll, getOne, create, confirm, cancel, complete };
+const dispute = async (sessionId, studentId, reason) => {
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: { tutor: true, student: true },
+  });
+
+  if (!session) throw new Error("Sesión no encontrada");
+  if (session.studentId !== studentId) throw new Error("No autorizado");
+  if (session.status !== "pending_confirmation")
+    throw new Error("Solo puedes reportar sesiones pendientes de confirmación");
+
+  await prisma.session.update({
+    where: { id: sessionId },
+    data: { status: "disputed", notes: reason || session.notes },
+  });
+
+  const admins = await prisma.user.findMany({ where: { role: "admin" } });
+  for (const admin of admins) {
+    await sendMail({
+      to: admin.email,
+      subject: "Nueva disputa de sesión",
+      html: templates.sessionDisputed({
+        adminName: admin.name,
+        studentName: session.student.name,
+        tutorName: session.tutor.name,
+        date: new Date(session.date).toLocaleDateString("es-HN"),
+        startTime: session.startTime,
+        reason: reason || "Sin razón especificada",
+        sessionId,
+      }),
+    });
+  }
+
+  return await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: sessionInclude,
+  });
+};
+
+const resolve = async (sessionId, favorOf) => {
+  if (!["student", "tutor"].includes(favorOf))
+    throw new Error("favorOf debe ser student o tutor");
+
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: { tutor: { include: { wallet: true } } },
+  });
+
+  if (!session) throw new Error("Sesión no encontrada");
+  if (session.status !== "disputed")
+    throw new Error("La sesión no está en disputa");
+
+  if (favorOf === "student") {
+    await prisma.$transaction(async (tx) => {
+      await tx.session.update({
+        where: { id: sessionId },
+        data: { status: "cancelled" },
+      });
+
+      const studentWallet = await tx.wallet.findUnique({
+        where: { userId: session.studentId },
+      });
+      await tx.wallet.update({
+        where: { userId: session.studentId },
+        data: {
+          balance: { increment: session.price },
+          frozen: { decrement: session.price },
+        },
+      });
+
+      await tx.transaction.create({
+        data: {
+          walletId: studentWallet.id,
+          type: "refund",
+          amount: session.price,
+          description: "Reembolso por disputa resuelta a favor del estudiante",
+          sessionId,
+        },
+      });
+    });
+
+    const student = await prisma.user.findUnique({
+      where: { id: session.studentId },
+    });
+    await sendMail({
+      to: student.email,
+      subject: "Disputa resuelta a tu favor",
+      html: templates.sessionDisputeResolved({
+        userName: student.name,
+        favorOf: "student",
+        amount: session.price,
+      }),
+    });
+  } else {
+    const commission = session.price * 0.1;
+    const tutorEarnings = session.price - commission;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.session.update({
+        where: { id: sessionId },
+        data: { status: "completed" },
+      });
+
+      const studentWallet = await tx.wallet.findUnique({
+        where: { userId: session.studentId },
+      });
+      await tx.wallet.update({
+        where: { userId: session.studentId },
+        data: { frozen: { decrement: session.price } },
+      });
+
+      const tutorWallet = session.tutor.wallet;
+      await tx.wallet.update({
+        where: { userId: session.tutorId },
+        data: {
+          balance: { increment: tutorEarnings },
+          lifetimeEarned: { increment: tutorEarnings },
+        },
+      });
+
+      await tx.transaction.create({
+        data: {
+          walletId: studentWallet.id,
+          type: "released",
+          amount: session.price,
+          description: "Pago liberado por disputa resuelta a favor del tutor",
+          sessionId,
+        },
+      });
+
+      await tx.transaction.create({
+        data: {
+          walletId: tutorWallet.id,
+          type: "released",
+          amount: tutorEarnings,
+          description: "Pago recibido por disputa resuelta a tu favor",
+          sessionId,
+        },
+      });
+
+      await tx.tutorProfile.update({
+        where: { userId: session.tutorId },
+        data: { totalSessions: { increment: 1 } },
+      });
+    });
+
+    const tutor = await prisma.user.findUnique({
+      where: { id: session.tutorId },
+    });
+    await sendMail({
+      to: tutor.email,
+      subject: "Disputa resuelta a tu favor",
+      html: templates.sessionDisputeResolved({
+        userName: tutor.name,
+        favorOf: "tutor",
+        amount: session.price * 0.9,
+      }),
+    });
+  }
+
+  return await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: sessionInclude,
+  });
+};
+
+module.exports = {
+  getAll,
+  getOne,
+  create,
+  confirm,
+  cancel,
+  complete,
+  studentConfirm,
+  dispute,
+  resolve,
+};

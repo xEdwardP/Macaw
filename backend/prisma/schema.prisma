@@ -160,6 +160,8 @@ model Session {
 enum SessionStatus {
   pending
   confirmed
+  pending_confirmation
+  disputed
   completed
   cancelled
 }

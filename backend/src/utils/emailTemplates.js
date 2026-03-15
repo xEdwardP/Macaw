@@ -43,14 +43,14 @@ const baseTemplate = (content) => `
   </table>
 </body>
 </html>
-`
+`;
 
 const infoRow = (label, value) => `
   <tr>
     <td style="padding:10px 12px; color:#6b7280; font-size:14px; width:35%;">${label}</td>
     <td style="padding:10px 12px; color:#111827; font-size:14px; font-weight:600;">${value}</td>
   </tr>
-`
+`;
 
 const button = (text, url) => `
   <div style="text-align:center; margin-top:28px;">
@@ -58,28 +58,41 @@ const button = (text, url) => `
       ${text}
     </a>
   </div>
-`
+`;
 
-const sessionBooked = ({ studentName, tutorName, subject, date, startTime, meetingUrl }) =>
+const sessionBooked = ({
+  studentName,
+  tutorName,
+  subject,
+  date,
+  startTime,
+  meetingUrl,
+}) =>
   baseTemplate(`
     <h2 style="margin:0 0 8px; color:#111827; font-size:22px;">Sesion reservada</h2>
     <p style="margin:0 0 24px; color:#6b7280; font-size:15px;">Hola <strong>${studentName}</strong>, tu sesion fue reservada exitosamente.</p>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb;">
-      ${infoRow('Tutor', tutorName)}
-      ${infoRow('Materia', subject)}
-      ${infoRow('Fecha', date)}
-      ${infoRow('Hora', startTime)}
+      ${infoRow("Tutor", tutorName)}
+      ${infoRow("Materia", subject)}
+      ${infoRow("Fecha", date)}
+      ${infoRow("Hora", startTime)}
     </table>
 
     <p style="margin:24px 0 0; color:#6b7280; font-size:14px;">
       Los creditos han sido reservados. Se liberaran al tutor una vez completada la sesion.
     </p>
 
-    ${button('Unirse a la sesion', meetingUrl)}
-  `)
+    ${button("Unirse a la sesion", meetingUrl)}
+  `);
 
-const sessionConfirmed = ({ studentName, tutorName, date, startTime, meetingUrl }) =>
+const sessionConfirmed = ({
+  studentName,
+  tutorName,
+  date,
+  startTime,
+  meetingUrl,
+}) =>
   baseTemplate(`
     <h2 style="margin:0 0 8px; color:#111827; font-size:22px;">Sesion confirmada</h2>
     <p style="margin:0 0 24px; color:#6b7280; font-size:15px;">
@@ -87,9 +100,9 @@ const sessionConfirmed = ({ studentName, tutorName, date, startTime, meetingUrl 
     </p>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb;">
-      ${infoRow('Tutor', tutorName)}
-      ${infoRow('Fecha', date)}
-      ${infoRow('Hora', startTime)}
+      ${infoRow("Tutor", tutorName)}
+      ${infoRow("Fecha", date)}
+      ${infoRow("Hora", startTime)}
     </table>
 
     <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:8px; padding:14px 16px; margin-top:20px;">
@@ -98,8 +111,8 @@ const sessionConfirmed = ({ studentName, tutorName, date, startTime, meetingUrl 
       </p>
     </div>
 
-    ${button('Unirse a la sesion', meetingUrl)}
-  `)
+    ${button("Unirse a la sesion", meetingUrl)}
+  `);
 
 const sessionCancelled = ({ userName, date, startTime, refundAmount }) =>
   baseTemplate(`
@@ -109,20 +122,30 @@ const sessionCancelled = ({ userName, date, startTime, refundAmount }) =>
     </p>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb;">
-      ${infoRow('Fecha', date)}
-      ${infoRow('Hora', startTime)}
-      ${refundAmount ? infoRow('Reembolso', `$${refundAmount}`) : ''}
+      ${infoRow("Fecha", date)}
+      ${infoRow("Hora", startTime)}
+      ${refundAmount ? infoRow("Reembolso", `$${refundAmount}`) : ""}
     </table>
 
-    ${refundAmount ? `
+    ${
+      refundAmount
+        ? `
     <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:14px 16px; margin-top:20px;">
       <p style="margin:0; color:#065f46; font-size:14px;">
         Se han reembolsado <strong>$${refundAmount}</strong> a tu wallet.
       </p>
-    </div>` : ''}
-  `)
+    </div>`
+        : ""
+    }
+  `);
 
-const sessionReminder = ({ userName, tutorName, date, startTime, meetingUrl }) =>
+const sessionReminder = ({
+  userName,
+  tutorName,
+  date,
+  startTime,
+  meetingUrl,
+}) =>
   baseTemplate(`
     <h2 style="margin:0 0 8px; color:#111827; font-size:22px;">Recordatorio de sesion</h2>
     <p style="margin:0 0 24px; color:#6b7280; font-size:15px;">
@@ -130,9 +153,9 @@ const sessionReminder = ({ userName, tutorName, date, startTime, meetingUrl }) =
     </p>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb;">
-      ${infoRow('Con', tutorName)}
-      ${infoRow('Fecha', date)}
-      ${infoRow('Hora', startTime)}
+      ${infoRow("Con", tutorName)}
+      ${infoRow("Fecha", date)}
+      ${infoRow("Hora", startTime)}
     </table>
 
     <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:14px 16px; margin-top:20px;">
@@ -141,7 +164,96 @@ const sessionReminder = ({ userName, tutorName, date, startTime, meetingUrl }) =
       </p>
     </div>
 
-    ${button('Unirse a la sesion', meetingUrl)}
-  `)
+    ${button("Unirse a la sesion", meetingUrl)}
+  `);
 
-module.exports = { sessionBooked, sessionConfirmed, sessionCancelled, sessionReminder }
+const sessionPendingConfirmation = ({
+  studentName,
+  tutorName,
+  date,
+  startTime,
+}) =>
+  baseTemplate(`
+    <h2 style="margin:0 0 8px; color:#111827; font-size:22px;">Confirma tu sesión</h2>
+    <p style="margin:0 0 24px; color:#6b7280; font-size:15px;">
+      Hola <strong>${studentName}</strong>, el tutor <strong>${tutorName}</strong>
+      ha marcado la sesión como completada. Por favor confirma que recibiste la tutoría.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb;">
+      ${infoRow("Tutor", tutorName)}
+      ${infoRow("Fecha", date)}
+      ${infoRow("Hora", startTime)}
+    </table>
+
+    <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:8px; padding:14px 16px; margin-top:20px;">
+      <p style="margin:0; color:#92400e; font-size:14px;">
+        Si no confirmas en 24 horas el pago se liberará automáticamente al tutor.
+      </p>
+    </div>
+  `);
+
+const sessionDisputed = ({
+  adminName,
+  studentName,
+  tutorName,
+  date,
+  startTime,
+  reason,
+  sessionId,
+}) =>
+  baseTemplate(`
+    <h2 style="margin:0 0 8px; color:#111827; font-size:22px;">Nueva disputa de sesión</h2>
+    <p style="margin:0 0 24px; color:#6b7280; font-size:15px;">
+      Hola <strong>${adminName}</strong>, el estudiante <strong>${studentName}</strong>
+      ha reportado un problema con su sesión.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb;">
+      ${infoRow("Estudiante", studentName)}
+      ${infoRow("Tutor", tutorName)}
+      ${infoRow("Fecha", date)}
+      ${infoRow("Hora", startTime)}
+      ${infoRow("Motivo", reason)}
+    </table>
+
+    <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:14px 16px; margin-top:20px;">
+      <p style="margin:0; color:#991b1b; font-size:14px;">
+        Ingresa al panel de administración para resolver esta disputa.
+      </p>
+    </div>
+  `);
+
+const sessionDisputeResolved = ({ userName, favorOf, amount }) =>
+  baseTemplate(`
+    <h2 style="margin:0 0 8px; color:#111827; font-size:22px;">Disputa resuelta</h2>
+    <p style="margin:0 0 24px; color:#6b7280; font-size:15px;">
+      Hola <strong>${userName}</strong>, la disputa ha sido resuelta por el administrador.
+    </p>
+
+    ${
+      favorOf === "student"
+        ? `
+    <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:14px 16px;">
+      <p style="margin:0; color:#065f46; font-size:14px;">
+        La disputa fue resuelta a tu favor. Se han reembolsado <strong>$${amount}</strong> a tu wallet.
+      </p>
+    </div>`
+        : `
+    <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:14px 16px;">
+      <p style="margin:0; color:#065f46; font-size:14px;">
+        La disputa fue resuelta a tu favor. Se han acreditado <strong>$${amount}</strong> a tu wallet.
+      </p>
+    </div>`
+    }
+  `);
+
+module.exports = {
+  sessionBooked,
+  sessionConfirmed,
+  sessionCancelled,
+  sessionReminder,
+  sessionPendingConfirmation,
+  sessionDisputed,
+  sessionDisputeResolved,
+};

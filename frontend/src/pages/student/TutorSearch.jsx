@@ -11,18 +11,25 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { tutorsService } from "../../services/tutors.service";
+import { universitiesService } from "../../services/universities.service";
 
 export default function TutorSearch() {
   const [search, setSearch] = useState("");
   const [minRating, setMinRating] = useState("");
   const [maxRate, setMaxRate] = useState("");
+  const [facultyId, setFacultyId] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
+  const { data: faculties } = useQuery({
+    queryKey: ["faculties"],
+    queryFn: () => universitiesService.getFaculties().then((r) => r.data.data),
+  });
+
   const { data, isLoading } = useQuery({
-    queryKey: ["tutors", search, minRating, maxRate],
+    queryKey: ["tutors", search, minRating, maxRate, facultyId],
     queryFn: () =>
       tutorsService
-        .getAll({ search, minRating, maxRate })
+        .getAll({ search, minRating, maxRate, facultyId })
         .then((r) => r.data.data),
   });
 
@@ -72,8 +79,27 @@ export default function TutorSearch() {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex gap-4 mt-4"
+              className="flex flex-wrap gap-4 mt-4"
             >
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Facultad
+                </label>
+                <select
+                  value={facultyId}
+                  onChange={(e) => setFacultyId(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none
+                  focus:ring-2 focus:ring-orange-500 text-sm"
+                >
+                  <option value="">Todas las facultades</option>
+                  {(faculties || []).map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Rating mínimo
@@ -90,6 +116,7 @@ export default function TutorSearch() {
                   <option value="5">5 estrellas</option>
                 </select>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Precio máximo por hora
@@ -107,12 +134,14 @@ export default function TutorSearch() {
                   <option value="20">Hasta $20</option>
                 </select>
               </div>
+
               <div className="flex items-end">
                 <button
                   onClick={() => {
                     setSearch("");
                     setMinRating("");
                     setMaxRate("");
+                    setFacultyId("");
                   }}
                   className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 underline"
                 >

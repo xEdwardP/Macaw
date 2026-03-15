@@ -55,4 +55,45 @@ const complete = async (req, res) => {
   }
 };
 
-module.exports = { getAll, getOne, create, confirm, cancel, complete };
+const studentConfirm = async (req, res) => {
+  try {
+    const result = await service.studentConfirm(req.params.id, req.user.id);
+    return response.ok(res, result, "Sesión confirmada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const dispute = async (req, res) => {
+  try {
+    const result = await service.dispute(
+      req.params.id,
+      req.user.id,
+      req.body.reason,
+    );
+    return response.ok(res, result, "Disputa abierta");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const resolve = async (req, res) => {
+  try {
+    const result = await service.resolve(req.params.id, req.body.favorOf);
+    return response.ok(res, result, "Disputa resuelta");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+module.exports = {
+  getAll,
+  getOne,
+  create,
+  confirm,
+  cancel,
+  complete,
+  studentConfirm,
+  dispute,
+  resolve,
+};

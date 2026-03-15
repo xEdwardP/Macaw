@@ -6,6 +6,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const http = require("http");
 const { Server } = require("socket.io");
+const { scheduleAutoConfirm } = require("./jobs/autoConfirm");
 
 const app = express();
 const server = http.createServer(app);
@@ -25,6 +26,7 @@ io.on("connection", (socket) => {
 
 app.set("io", io);
 scheduleReminders();
+scheduleAutoConfirm();
 
 // Middlewares
 app.use(helmet());
