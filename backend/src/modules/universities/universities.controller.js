@@ -114,6 +114,52 @@ const captureUniversityOrder = async (req, res) => {
     return response.error(res, err.message);
   }
 };
+const createFaculty = async (req, res) => {
+  try {
+    const result = await service.createFaculty(req.body);
+    return response.created(res, result, "Facultad creada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const updateFaculty = async (req, res) => {
+  try {
+    const result = await service.updateFaculty(req.params.id, req.body);
+    return response.ok(res, result, "Facultad actualizada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const deleteFaculty = async (req, res) => {
+  try {
+    await service.deleteFaculty(req.params.id);
+    return response.ok(res, null, "Facultad eliminada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const assignSubjectToFaculty = async (req, res) => {
+  try {
+    const result = await service.assignSubjectToFaculty(req.params.id, req.body.subjectId);
+    return response.created(res, result, "Materia asignada a la facultad");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const removeSubjectFromFaculty = async (req, res) => {
+  try {
+    await service.removeSubjectFromFaculty(req.params.id, req.params.subjectId);
+    return response.ok(res, null, "Materia removida de la facultad");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+
 
 module.exports = {
   getSubjects,
@@ -128,4 +174,9 @@ module.exports = {
   getList,
   createUniversityOrder,
   captureUniversityOrder,
+  createFaculty,
+  updateFaculty,
+  deleteFaculty,
+  assignSubjectToFaculty,
+  removeSubjectFromFaculty,
 };

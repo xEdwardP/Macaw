@@ -270,6 +270,75 @@ const captureUniversityOrder = async (universityId, orderId) => {
   };
 };
 
+
+
+// Facultades
+const createFaculty = async ({ universityId, name, code }) => {
+  if (!universityId || !name || !code) throw new Error("Datos incompletos");
+  if (name.length < 3) throw new Error("El nombre debe tener al menos 3 caracteres");
+  if (code.length < 2) throw new Error("El código debe tener al menos 2 caracteres");
+
+  // Validar que el código sea único por universidad
+  const existing = await prisma.faculty.findFirst({
+    where: { universityId, code },
+  });
+  if (existing) throw new Error("El código ya existe para esta universidad");
+
+  return await prisma.faculty.create({
+    data: { universityId, name, code },
+  });
+};
+
+const updateFaculty = async (id, { name, code }) => {
+  const faculty = await prisma.faculty.findUnique({ where: { id } });
+  if (!faculty) throw new Error("Facultad no encontrada");
+
+  if (name && name.length < 3) throw new Error("El nombre debe tener al menos 3 caracteres");
+  if (code && code.length < 2) throw new Error("El código debe tener al menos 2 caracteres");
+
+  if (code && code !== faculty.code) {
+    const exists = await prisma.faculty.findFirst({
+      where: { universityId: faculty.universityId, code },
+    });
+    if (exists) throw new Error("El código ya existe para esta universidad");
+  }
+
+  return await prisma.faculty.update({
+    where: { id },
+    data: { name, code },
+  });
+};
+
+const deleteFaculty = async (id) => {
+  const faculty = await prisma.faculty.findUnique({ where: { id } });
+  if (!faculty) throw new Error("Facultad no encontrada");
+
+  return await prisma.faculty.delete({ where: { id } });
+};
+
+// Asignar/quitar materia
+const assignSubjectToFaculty = async (facultyId, subjectId) => {
+  if (!facultyId || !subjectId) throw new Error("Datos incompletos");
+
+  const existing = await prisma.facultySubject.findFirst({
+    where: { facultyId, subjectId },
+  });
+  if (existing) throw new Error("La materia ya está asignada a esta facultad");
+
+  return await prisma.facultySubject.create({
+    data: { facultyId, subjectId },
+  });
+};
+
+const removeSubjectFromFaculty = async (facultyId, subjectId) => {
+  const existing = await prisma.facultySubject.findFirst({
+    where: { facultyId, subjectId },
+  });
+  if (!existing) throw new Error("La materia no está asignada a esta facultad");
+
+  return await prisma.facultySubject.delete({ where: { id: existing.id } });
+};
+
 module.exports = {
   getSubjects,
   getFaculties,
@@ -283,4 +352,9 @@ module.exports = {
   getList,
   createUniversityOrder,
   captureUniversityOrder,
+  createFaculty,
+  updateFaculty,
+  deleteFaculty,
+  assignSubjectToFaculty,
+  removeSubjectFromFaculty
 };

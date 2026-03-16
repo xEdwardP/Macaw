@@ -558,3 +558,30 @@ module.exports = {
   dispute,
   resolve,
 };
+
+
+const getPaginated = async (user, { limit = 10, offset = 0, status }) => {
+  const where = {};
+
+  if (user.role === "student") where.studentId = user.id;
+  if (user.role === "tutor") where.tutorId = user.id;
+  if (status) where.status = status;
+
+  const [sessions, total] = await Promise.all([
+    prisma.session.findMany({
+      where,
+      include: sessionInclude,
+      orderBy: { date: "desc" },
+      take: parseInt(limit),
+      skip: parseInt(offset),
+    }),
+    prisma.session.count({ where }),
+  ]);
+
+  return {
+    data: sessions,
+    total,
+    limit: parseInt(limit),
+    offset: parseInt(offset),
+  };
+};

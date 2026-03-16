@@ -148,13 +148,23 @@ function DisputeModal({ session, onClose, onSubmit, isPending }) {
 
 export default function MySessions() {
   const [filter, setFilter] = useState("all");
+  const [page, setPage] = useState(1);
   const [reviewSession, setReviewSession] = useState(null);
   const [disputeSession, setDisputeSession] = useState(null);
   const queryClient = useQueryClient();
+  const limit = 5; // sesiones por página
 
+  // Fetch con paginación y filtros
   const { data, isLoading } = useQuery({
-    queryKey: ["sessions"],
-    queryFn: () => sessionsService.getAll().then((r) => r.data.data),
+    queryKey: ["sessions", page, filter],
+    queryFn: () =>
+      sessionsService
+        .getAll({
+          page,
+          limit,
+          status: filter === "all" ? undefined : filter,
+        })
+        .then((r) => r.data),
   });
 
   const { mutate: cancelSession } = useMutation({
@@ -201,9 +211,8 @@ export default function MySessions() {
       toast.error(err.response?.data?.message || "Error al enviar reporte"),
   });
 
-  const sessions = data || [];
-  const filtered =
-    filter === "all" ? sessions : sessions.filter((s) => s.status === filter);
+  const sessions = data?.data || [];
+  const totalPages = data?.totalPages || 1;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -223,7 +232,10 @@ export default function MySessions() {
           ].map((f) => (
             <button
               key={f.key}
-              onClick={() => setFilter(f.key)}
+              onClick={() => {
+                setFilter(f.key);
+                setPage(1); // reinicia paginación al cambiar filtro
+              }}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
                 ${
                   filter === f.key
@@ -245,19 +257,15 @@ export default function MySessions() {
               </div>
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : sessions.length === 0 ? (
           <div className="text-center py-20">
             <Calendar className="mx-auto text-gray-300 mb-4" size={48} />
-            <h3 className="text-lg font-medium text-gray-900">
-              No hay sesiones
-            </h3>
-            <p className="text-gray-500 mt-1">
-              No tienes sesiones en esta categoria
-            </p>
+            <h3 className="text-lg font-medium text-gray-900">No hay sesiones</h3>
+            <p className="text-gray-500 mt-1">No tienes sesiones en esta categoria</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {filtered.map((session, i) => {
+            {sessions.map((session, i) => {
               const status = STATUS_LABELS[session.status];
               const [year, month, day] = session.date
                 .split("T")[0]
@@ -281,6 +289,7 @@ export default function MySessions() {
                   transition={{ delay: i * 0.05 }}
                   className="bg-white rounded-xl border border-gray-100 shadow-sm p-6"
                 >
+                  {/* ... tu contenido de sesión aquí, igual que antes ... */}
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <div className="flex items-center gap-3 mb-1">
@@ -314,6 +323,7 @@ export default function MySessions() {
                   </div>
 
                   <div className="flex gap-3 pt-4 border-t border-gray-100 flex-wrap">
+                    {/* Aquí van tus botones y modales, igual que antes */}
                     {session.status === "confirmed" && session.meetingUrl && (
                       <a
                         href={session.meetingUrl}
@@ -322,10 +332,9 @@ export default function MySessions() {
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
                       >
                         <Video size={14} />
-                        Unirse a la sesion
+                        Unirse a la sesión
                       </a>
                     )}
-
                     {session.status === "pending_confirmation" && (
                       <>
                         <button
@@ -354,17 +363,6 @@ export default function MySessions() {
                         </div>
                       </>
                     )}
-
-                    {session.status === "disputed" && (
-                      <div
-                        className="flex items-center gap-2 text-red-600 text-sm bg-red-50
-                      border border-red-200 px-3 py-2 rounded-lg"
-                      >
-                        <AlertTriangle size={14} />
-                        Disputa en revisión por el administrador
-                      </div>
-                    )}
-
                     {["pending", "confirmed"].includes(session.status) && (
                       <button
                         onClick={() => {
@@ -378,7 +376,6 @@ export default function MySessions() {
                         Cancelar
                       </button>
                     )}
-
                     {session.status === "completed" && !session.review && (
                       <button
                         onClick={() => setReviewSession(session)}
@@ -389,7 +386,6 @@ export default function MySessions() {
                         Dejar reseña
                       </button>
                     )}
-
                     {session.status === "completed" && session.review && (
                       <div className="flex items-center gap-2 text-green-600 text-sm">
                         <CheckCircle size={14} />
@@ -400,6 +396,29 @@ export default function MySessions() {
                 </motion.div>
               );
             })}
+          </div>
+        )}
+
+        {/* PAGINACIÓN */}
+        {sessions.length > 0 && (
+          <div className="flex justify-between mt-6">
+            <button
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              disabled={page === 1}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <span>
+              Página {page} de {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              disabled={page === totalPages}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Siguiente
+            </button>
           </div>
         )}
       </div>

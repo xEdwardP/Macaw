@@ -97,3 +97,14 @@ module.exports = {
   dispute,
   resolve,
 };
+
+
+const getPaginated = async (req, res) => {
+  try {
+    const { limit = 10, offset = 0, status } = req.query;
+    const result = await service.getPaginated(req.user, { limit, offset, status });
+    return response.ok(res, result);
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};

@@ -58,4 +58,41 @@ router.post(
   ctrl.captureUniversityOrder,
 );
 
+// Faculties
+router.post(
+  "/faculties",
+  authenticate,
+  authorize("admin", "university"),
+  ctrl.createFaculty,
+);
+
+router.put(
+  "/faculties/:id",
+  authenticate,
+  authorize("admin", "university"),
+  ctrl.updateFaculty,
+);
+
+router.delete(
+  "/faculties/:id",
+  authenticate,
+  authorize("admin", "university"),
+  ctrl.deleteFaculty,
+);
+
+// Asignar/Quitar materias
+router.post(
+  "/faculties/:id/subjects",
+  authenticate,
+  authorize("admin", "university"),
+  ctrl.assignSubjectToFaculty,
+);
+
+router.delete(
+  "/faculties/:id/subjects/:subjectId",
+  authenticate,
+  authorize("admin", "university"),
+  ctrl.removeSubjectFromFaculty,
+);
+
 module.exports = router;

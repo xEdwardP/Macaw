@@ -5,12 +5,13 @@ services:
     restart: unless-stopped
 
     ports:
-      - "5433:5432"
+      - "5450:5432"
 
     environment:
-      POSTGRES_DB: macaw_db
       POSTGRES_USER: macaw
       POSTGRES_PASSWORD: macaw123
+      POSTGRES_DB: macaw_db
+     
 
     volumes:
       - postgres_data:/var/lib/postgresql/data

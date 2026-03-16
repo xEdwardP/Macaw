@@ -7,6 +7,7 @@ const ctrl = require("./sessions.controller");
 
 router.get("/", authenticate, ctrl.getAll);
 router.get("/:id", authenticate, ctrl.getOne);
+router.get("/", authenticate, ctrl.getPaginated);
 router.post("/", authenticate, authorize("student"), ctrl.create);
 router.put("/:id/confirm", authenticate, authorize("tutor"), ctrl.confirm);
 router.put("/:id/cancel", authenticate, ctrl.cancel);
