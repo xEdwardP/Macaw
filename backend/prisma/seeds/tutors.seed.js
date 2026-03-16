@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
+const { CAREER_FACULTY_MAP } = require("./users.seed");
 
 const TUTORS_DATA = [
   {
@@ -23,7 +24,6 @@ const TUTORS_DATA = [
     hourlyRate: 7,
     rating: 4.7,
   },
-
   {
     name: "Sofía Alejandra Reyes Castillo",
     email: "sreyes@unicah.edu",
@@ -44,7 +44,6 @@ const TUTORS_DATA = [
     hourlyRate: 10,
     rating: 4.7,
   },
-
   {
     name: "Diego Alejandro Torres Vargas",
     email: "dtorres@unicah.edu",
@@ -65,7 +64,6 @@ const TUTORS_DATA = [
     hourlyRate: 7,
     rating: 4.6,
   },
-
   {
     name: "Valeria Andrea Cruz Pineda",
     email: "vcruz@unicah.edu",
@@ -86,7 +84,6 @@ const TUTORS_DATA = [
     hourlyRate: 6,
     rating: 4.5,
   },
-
   {
     name: "Roberto José Paz Aguilar",
     email: "rpaz@unicah.edu",
@@ -107,7 +104,6 @@ const TUTORS_DATA = [
     hourlyRate: 9,
     rating: 4.6,
   },
-
   {
     name: "Andrea Michelle López Soto",
     email: "alopez@unicah.edu",
@@ -128,7 +124,6 @@ const TUTORS_DATA = [
     hourlyRate: 7,
     rating: 4.5,
   },
-
   {
     name: "Marco Antonio Flores Herrera",
     email: "mflores@unicah.edu",
@@ -149,7 +144,6 @@ const TUTORS_DATA = [
     hourlyRate: 6,
     rating: 4.4,
   },
-
   {
     name: "Gerardo Josué Vargas Mejía",
     email: "gvargas@unicah.edu",
@@ -170,7 +164,6 @@ const TUTORS_DATA = [
     hourlyRate: 7,
     rating: 4.5,
   },
-
   {
     name: "Josías David Zelaya Reconco",
     email: "jzelaya@unicah.edu",
@@ -191,7 +184,6 @@ const TUTORS_DATA = [
     hourlyRate: 6,
     rating: 4.4,
   },
-
   {
     name: "Bessy Lissette Hernández Chirinos",
     email: "bhernandez@unicah.edu",
@@ -212,7 +204,6 @@ const TUTORS_DATA = [
     hourlyRate: 7,
     rating: 4.5,
   },
-
   {
     name: "Paola Fernanda Castillo Vega",
     email: "pcastillo@unicah.edu",
@@ -235,12 +226,17 @@ const TUTORS_DATA = [
   },
 ];
 
-async function seedTutors(universityId, allSubjects) {
+async function seedTutors(universityId, allSubjects, faculties) {
   console.log("Seeding tutors...");
 
   const password = await bcrypt.hash("password123", 12);
 
   for (const t of TUTORS_DATA) {
+    const facultyCode = CAREER_FACULTY_MAP[t.career];
+    const facultyId = faculties[facultyCode]?.id || null;
+
+    if (!facultyId) console.warn(`Faculty not found for career: ${t.career}`);
+
     const tutor = await prisma.user.upsert({
       where: { email: t.email },
       update: {},
@@ -253,6 +249,7 @@ async function seedTutors(universityId, allSubjects) {
         gpa: t.gpa,
         quarter: t.quarter,
         universityId,
+        facultyId,
       },
     });
 

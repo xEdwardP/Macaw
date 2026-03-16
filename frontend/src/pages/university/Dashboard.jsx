@@ -41,8 +41,8 @@ export default function UniversityDashboard() {
         </motion.div>
 
         {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {[...Array(4)].map((_, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            {[...Array(5)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl p-5 animate-pulse">
                 <div className="w-10 h-10 bg-gray-200 rounded-lg mb-3" />
                 <div className="h-6 bg-gray-200 rounded w-1/2 mb-2" />
@@ -51,7 +51,7 @@ export default function UniversityDashboard() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             {[
               {
                 label: "Estudiantes",
@@ -80,6 +80,13 @@ export default function UniversityDashboard() {
                 icon: TrendingUp,
                 color: "text-purple-600",
                 bg: "bg-purple-50",
+              },
+              {
+                label: "Balance universitario",
+                value: `$${analytics?.overview?.universityBalance?.toFixed(2) || "0.00"}`,
+                icon: DollarSign,
+                color: "text-green-600",
+                bg: "bg-green-50",
               },
             ].map((stat, i) => (
               <motion.div
@@ -252,7 +259,20 @@ export default function UniversityDashboard() {
               <DollarSign size={16} className="text-orange-600" />
               Resumen de subsidios
             </h3>
-            <div className="space-y-3 mb-6">
+
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-700">
+                  Balance disponible
+                </p>
+                <p className="text-xs text-gray-400">Fondos para subsidios</p>
+              </div>
+              <span className="text-2xl font-bold text-green-600">
+                ${analytics?.overview?.universityBalance?.toFixed(2) || "0.00"}
+              </span>
+            </div>
+
+            <div className="space-y-3">
               <div className="flex justify-between items-center py-2 border-b border-gray-50">
                 <span className="text-sm text-gray-500">Total subsidiado</span>
                 <span className="font-semibold text-green-600">

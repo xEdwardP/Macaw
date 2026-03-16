@@ -8,7 +8,9 @@ const tutorSelect = {
   career: true,
   quarter: true,
   avatar: true,
+  facultyId: true,
   university: { select: { id: true, name: true } },
+  faculty: { select: { id: true, name: true, code: true } },
   tutorProfile: {
     include: {
       subjects: {

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
-import { Star, BookOpen, Clock, Plus, X, Save } from "lucide-react";
+import { Star, BookOpen, Clock, Plus, X, Save, Building } from "lucide-react";
 import toast from "react-hot-toast";
 import { tutorsService } from "../../services/tutors.service";
 import { useAuthStore } from "../../store/authStore";
@@ -153,6 +153,14 @@ export default function TutorMyProfile() {
             <div>
               <h1 className="text-xl font-bold text-gray-900">{user?.name}</h1>
               <p className="text-gray-500 text-sm">{user?.career}</p>
+              {tutor?.faculty && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Building size={12} className="text-gray-400" />
+                  <span className="text-xs text-gray-400">
+                    {tutor.faculty.name}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center gap-3 mt-1">
                 <div className="flex items-center gap-1">
                   <Star size={14} className="text-yellow-400 fill-yellow-400" />
@@ -340,8 +348,7 @@ export default function TutorMyProfile() {
                     .map((slot) => (
                       <div
                         key={slot.dayOfWeek}
-                        className="flex items-center justify-between p-3
-                      bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-sm font-medium text-gray-700 w-24">

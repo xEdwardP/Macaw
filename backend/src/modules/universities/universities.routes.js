@@ -8,6 +8,7 @@ const ctrl = require("./universities.controller");
 router.get("/subjects", ctrl.getSubjects);
 router.get("/faculties", ctrl.getFaculties);
 router.get("/faculties/:id/subjects", ctrl.getSubjectsByFaculty);
+router.get("/list", authenticate, authorize("admin"), ctrl.getList);
 router.post(
   "/subjects",
   authenticate,
@@ -37,6 +38,24 @@ router.get(
   authenticate,
   authorize("admin"),
   ctrl.getPlatformEarnings,
+);
+router.post(
+  "/recharge",
+  authenticate,
+  authorize("admin"),
+  ctrl.rechargeUniversity,
+);
+router.post(
+  "/create-order",
+  authenticate,
+  authorize("university"),
+  ctrl.createUniversityOrder,
+);
+router.post(
+  "/capture-order",
+  authenticate,
+  authorize("university"),
+  ctrl.captureUniversityOrder,
 );
 
 module.exports = router;

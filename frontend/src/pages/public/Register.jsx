@@ -1,124 +1,230 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
-import { Mail, Lock, User, GraduationCap, BookOpen, Bird } from 'lucide-react'
-import { authService } from '../../services/auth.service'
-import { useAuthStore } from '../../store/authStore'
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import {
+  Mail,
+  Lock,
+  User,
+  GraduationCap,
+  BookOpen,
+  Bird,
+  Building,
+} from "lucide-react";
+import { authService } from "../../services/auth.service";
+import { useAuthStore } from "../../store/authStore";
+import { universitiesService } from "../../services/universities.service";
 
 const schema = z.object({
-  name:     z.string().min(2, 'Nombre muy corto'),
-  email:    z.string().email('Email inválido'),
-  password: z.string().min(6, 'Mínimo 6 caracteres'),
-  role:     z.enum(['student', 'tutor']),
-  career:   z.string().min(2, 'Ingresa tu carrera'),
-})
+  name: z.string().min(2, "Nombre muy corto"),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Mínimo 6 caracteres"),
+  role: z.enum(["student", "tutor"]),
+  facultyId: z.string().optional(),
+});
 
 export default function Register() {
-  const navigate = useNavigate()
-  const setAuth  = useAuthStore((s) => s.setAuth)
-  const [params] = useSearchParams()
+  const navigate = useNavigate();
+  const setAuth = useAuthStore((s) => s.setAuth);
+  const [params] = useSearchParams();
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { role: params.get('role') || 'student' }
-  })
+    defaultValues: { role: params.get("role") || "student" },
+  });
 
-  const selectedRole = watch('role')
+  const selectedRole = watch("role");
+  const email = watch("email");
+
+  const emailDomain = email?.includes("@") ? email.split("@")[1] : null;
+
+  const { data: faculties } = useQuery({
+    queryKey: ["faculties-register", emailDomain],
+    queryFn: () =>
+      universitiesService.getFaculties({}).then((r) => r.data.data),
+    enabled: !!emailDomain && emailDomain.includes("."),
+  });
 
   const { mutate, isPending } = useMutation({
     mutationFn: authService.register,
     onSuccess: ({ data }) => {
-      setAuth(data.data.user, data.data.token)
-      toast.success('Cuenta creada exitosamente')
-      navigate('/dashboard')
+      setAuth(data.data.user, data.data.token);
+      toast.success("Cuenta creada exitosamente");
+      navigate("/dashboard");
     },
     onError: (err) => {
-      toast.error(err.response?.data?.message || 'Error al crear la cuenta')
-    }
-  })
-
-  const fields = [
-    { id: 'name',     label: 'Nombre completo',     type: 'text',     placeholder: 'Juan Pérez',          icon: User },
-    { id: 'email',    label: 'Correo universitario', type: 'email',    placeholder: 'juan@uni.edu',        icon: Mail },
-    { id: 'career',   label: 'Carrera',              type: 'text',     placeholder: 'Ing. en Sistemas',    icon: BookOpen },
-    { id: 'password', label: 'Contraseña',           type: 'password', placeholder: '••••••••',            icon: Lock },
-  ]
+      toast.error(err.response?.data?.message || "Error al crear la cuenta");
+    },
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 w-full max-w-md">
-
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 justify-center">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 justify-center"
+          >
             <Bird className="text-orange-600" size={32} />
             <span className="text-2xl font-bold text-orange-600">Macaw</span>
           </Link>
-          <h2 className="text-2xl font-bold text-gray-900 mt-4">Crear cuenta</h2>
-          <p className="text-gray-500 text-sm mt-1">Únete a la comunidad Macaw</p>
+          <h2 className="text-2xl font-bold text-gray-900 mt-4">
+            Crear cuenta
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">
+            Únete a la comunidad Macaw
+          </p>
         </div>
 
         <form onSubmit={handleSubmit(mutate)} className="space-y-4">
-
           <div className="grid grid-cols-2 gap-3">
             <label className="relative cursor-pointer">
               <input
-                {...register('role')}
+                {...register("role")}
                 type="radio"
                 value="student"
                 className="peer sr-only"
               />
-              <div className={`border-2 rounded-lg p-3 text-center transition-all
-                ${selectedRole === 'student'
-                  ? 'border-orange-500 bg-orange-50'
-                  : 'border-gray-200 hover:border-gray-300'}`}
+              <div
+                className={`border-2 rounded-lg p-3 text-center transition-all
+                ${selectedRole === "student" ? "border-orange-500 bg-orange-50" : "border-gray-200 hover:border-gray-300"}`}
               >
-                <BookOpen className={`mx-auto mb-1 ${selectedRole === 'student' ? 'text-orange-600' : 'text-gray-400'}`} size={22} />
-                <div className="text-sm font-medium text-gray-700">Estudiante</div>
+                <BookOpen
+                  className={`mx-auto mb-1 ${selectedRole === "student" ? "text-orange-600" : "text-gray-400"}`}
+                  size={22}
+                />
+                <div className="text-sm font-medium text-gray-700">
+                  Estudiante
+                </div>
               </div>
             </label>
-
             <label className="relative cursor-pointer">
               <input
-                {...register('role')}
+                {...register("role")}
                 type="radio"
                 value="tutor"
                 className="peer sr-only"
               />
-              <div className={`border-2 rounded-lg p-3 text-center transition-all
-                ${selectedRole === 'tutor'
-                  ? 'border-orange-500 bg-orange-50'
-                  : 'border-gray-200 hover:border-gray-300'}`}
+              <div
+                className={`border-2 rounded-lg p-3 text-center transition-all
+                ${selectedRole === "tutor" ? "border-orange-500 bg-orange-50" : "border-gray-200 hover:border-gray-300"}`}
               >
-                <GraduationCap className={`mx-auto mb-1 ${selectedRole === 'tutor' ? 'text-orange-600' : 'text-gray-400'}`} size={22} />
+                <GraduationCap
+                  className={`mx-auto mb-1 ${selectedRole === "tutor" ? "text-orange-600" : "text-gray-400"}`}
+                  size={22}
+                />
                 <div className="text-sm font-medium text-gray-700">Tutor</div>
               </div>
             </label>
           </div>
 
-          {fields.map(({ id, label, type, placeholder, icon: Icon }) => (
-            <div key={id}>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nombre completo
+            </label>
+            <div className="relative">
+              <User
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={16}
+              />
+              <input
+                {...register("name")}
+                type="text"
+                placeholder="Juan Pérez"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+            {errors.name && (
+              <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Correo universitario
+            </label>
+            <div className="relative">
+              <Mail
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={16}
+              />
+              <input
+                {...register("email")}
+                type="email"
+                placeholder="juan@unicah.edu"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
+
+          {faculties?.length > 0 && (
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {label}
+                Facultad
               </label>
               <div className="relative">
-                <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  {...register(id)}
-                  type={type}
-                  placeholder={placeholder}
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg
-                  focus:outline-none focus:ring-2 focus:ring-orange-500
-                  focus:border-transparent transition-all"
+                <Building
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={16}
                 />
+                <select
+                  {...register("facultyId")}
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg
+                  focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+                >
+                  <option value="">Selecciona tu facultad</option>
+                  {faculties.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              {errors[id] && (
-                <p className="text-red-500 text-xs mt-1">{errors[id].message}</p>
+              {errors.facultyId && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.facultyId.message}
+                </p>
               )}
             </div>
-          ))}
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Contraseña
+            </label>
+            <div className="relative">
+              <Lock
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={16}
+              />
+              <input
+                {...register("password")}
+                type="password"
+                placeholder="••••••••"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg
+                focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+            </div>
+            {errors.password && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
 
           <button
             type="submit"
@@ -127,17 +233,20 @@ export default function Register() {
             text-white font-medium rounded-lg transition-colors
             disabled:opacity-50 disabled:cursor-not-allowed mt-2"
           >
-            {isPending ? 'Creando cuenta...' : 'Crear cuenta gratis'}
+            {isPending ? "Creando cuenta..." : "Crear cuenta gratis"}
           </button>
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-6">
-          Ya tienes cuenta?{' '}
-          <Link to="/login" className="text-orange-600 font-medium hover:underline">
+          Ya tienes cuenta?{" "}
+          <Link
+            to="/login"
+            className="text-orange-600 font-medium hover:underline"
+          >
             Inicia sesión
           </Link>
         </p>
       </div>
     </div>
-  )
+  );
 }

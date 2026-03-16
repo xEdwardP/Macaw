@@ -73,6 +73,48 @@ const getPlatformEarnings = async (req, res) => {
   }
 };
 
+const rechargeUniversity = async (req, res) => {
+  try {
+    const result = await service.rechargeUniversity(req.body);
+    return response.ok(res, result, "Balance universitario recargado");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const getList = async (req, res) => {
+  try {
+    const result = await service.getList();
+    return response.ok(res, result);
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const createUniversityOrder = async (req, res) => {
+  try {
+    const result = await service.createUniversityOrder(
+      req.user.universityId,
+      req.body.amount,
+    );
+    return response.ok(res, result, "Orden creada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const captureUniversityOrder = async (req, res) => {
+  try {
+    const result = await service.captureUniversityOrder(
+      req.user.universityId,
+      req.body.orderId,
+    );
+    return response.ok(res, result, "Pago completado");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
 module.exports = {
   getSubjects,
   getFaculties,
@@ -82,4 +124,8 @@ module.exports = {
   getStudents,
   getSubsidies,
   getPlatformEarnings,
+  rechargeUniversity,
+  getList,
+  createUniversityOrder,
+  captureUniversityOrder,
 };

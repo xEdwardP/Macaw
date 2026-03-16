@@ -4,7 +4,6 @@ import Landing from "./pages/public/Landing";
 import Login from "./pages/public/Login";
 import Register from "./pages/public/Register";
 import TutorSearch from "./pages/student/TutorSearch";
-
 import StudentDashboard from "./pages/student/Dashboard";
 import TutorDashboard from "./pages/tutor/Dashboard";
 import UniversityDashboard from "./pages/university/Dashboard";
@@ -20,6 +19,8 @@ import UniversityStudents from "./pages/university/Students";
 import UniversitySubsidies from "./pages/university/Subsidies";
 import AdminUsers from "./pages/admin/Users";
 import AdminSessions from "./pages/admin/Sessions";
+import AdminWithdrawals from "./pages/admin/Withdrawals";
+import AdminUniversities from "./pages/admin/Universities";
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, token } = useAuthStore();
@@ -198,6 +199,22 @@ export default function AppRouter() {
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
             <AdminSessions />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/withdrawals"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminWithdrawals />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/universities"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AdminUniversities />
           </ProtectedRoute>
         }
       />

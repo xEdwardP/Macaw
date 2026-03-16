@@ -13,6 +13,7 @@ model University {
   domain         String   @unique
   logo           String?
   commissionRate Float    @default(0.10)
+  balance        Float    @default(0)
   createdAt      DateTime @default(now())
 
   users     User[]
@@ -29,22 +30,23 @@ model Faculty {
 
   university University       @relation(fields: [universityId], references: [id])
   subjects   FacultySubject[]
+  users      User[]
 
   @@unique([universityId, code])
 }
 
 model Subject {
-  id         String   @id @default(cuid())
-  name       String
-  code       String   @unique
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
   quarter   Int?
-  credits    Int?
-  isGeneral  Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  credits   Int?
+  isGeneral Boolean  @default(false)
+  createdAt DateTime @default(now())
 
-  faculties  FacultySubject[]
-  tutors     TutorSubject[]
-  sessions   Session[]
+  faculties FacultySubject[]
+  tutors    TutorSubject[]
+  sessions  Session[]
 }
 
 model FacultySubject {
@@ -61,26 +63,49 @@ model FacultySubject {
 model User {
   id           String   @id @default(cuid())
   universityId String?
+  facultyId    String?
   name         String
   email        String   @unique
   password     String
   role         Role     @default(student)
   avatar       String?
   career       String?
-  quarter     Int?
+  quarter      Int?
   gpa          Float?
+  paypalEmail  String?
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  university        University?   @relation(fields: [universityId], references: [id])
-  tutorProfile      TutorProfile?
-  wallet            Wallet?
-  sessionsAsStudent Session[]     @relation("StudentSessions")
-  sessionsAsTutor   Session[]     @relation("TutorSessions")
-  reviewsGiven      Review[]      @relation("ReviewsGiven")
-  reviewsReceived   Review[]      @relation("ReviewsReceived")
-  subsidies         Subsidy[]
+  university         University?        @relation(fields: [universityId], references: [id])
+  faculty            Faculty?           @relation(fields: [facultyId],    references: [id])
+  tutorProfile       TutorProfile?
+  wallet             Wallet?
+  sessionsAsStudent  Session[]          @relation("StudentSessions")
+  sessionsAsTutor    Session[]          @relation("TutorSessions")
+  reviewsGiven       Review[]           @relation("ReviewsGiven")
+  reviewsReceived    Review[]           @relation("ReviewsReceived")
+  subsidies          Subsidy[]
+  withdrawalRequests WithdrawalRequest[]
+}
+
+model WithdrawalRequest {
+  id          String           @id @default(cuid())
+  userId      String
+  amount      Float
+  paypalEmail String
+  status      WithdrawalStatus @default(pending)
+  notes       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+enum WithdrawalStatus {
+  pending
+  approved
+  rejected
 }
 
 enum Role {
