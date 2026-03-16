@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const paypal = require("../../config/paypal");
 
 const getSubjects = async ({ search }) => {
   const where = {};
@@ -23,8 +24,11 @@ const createSubject = async ({ name, code, area, universityId }) => {
 
 const getAnalytics = async (user) => {
   const universityId = user.role === "admin" ? undefined : user.universityId;
-
   const where = universityId ? { universityId } : {};
+
+  const university = universityId
+    ? await prisma.university.findUnique({ where: { id: universityId } })
+    : null;
 
   const [
     totalStudents,
@@ -89,6 +93,7 @@ const getAnalytics = async (user) => {
       cancelledSessions,
       completionRate,
       totalSubsidiesAmount: totalSubsidies._sum.amount || 0,
+      universityBalance: university?.balance || 0,
     },
     topTutors,
     topSubjects,
@@ -119,6 +124,8 @@ const getStudents = async (user, { search }) => {
       career: true,
       quarter: true,
       gpa: true,
+      facultyId: true,
+      faculty: { select: { id: true, name: true, code: true } },
       wallet: { select: { balance: true } },
       sessionsAsStudent: {
         select: { id: true, status: true },
@@ -191,6 +198,78 @@ const getPlatformEarnings = async () => {
   };
 };
 
+const rechargeUniversity = async ({ universityId, amount }) => {
+  if (!universityId || !amount || amount <= 0)
+    throw new Error("Datos inválidos");
+
+  return await prisma.university.update({
+    where: { id: universityId },
+    data: { balance: { increment: parseFloat(amount) } },
+  });
+};
+
+const getList = async () => {
+  return await prisma.university.findMany({
+    orderBy: { name: "asc" },
+    include: {
+      _count: {
+        select: {
+          users: { where: { role: "student" } },
+        },
+      },
+    },
+  });
+};
+
+const createUniversityOrder = async (universityId, amount) => {
+  if (!universityId) throw new Error("Universidad requerida");
+  if (!amount || amount <= 0) throw new Error("Monto inválido");
+
+  const VALID_AMOUNTS = [100, 250, 500, 1000, 2000];
+  if (!VALID_AMOUNTS.includes(parseFloat(amount)))
+    throw new Error("Monto no válido");
+
+  const order = await paypal.createOrder(parseFloat(amount));
+  return {
+    orderId: order.id,
+    status: order.status,
+    amount,
+  };
+};
+
+const captureUniversityOrder = async (universityId, orderId) => {
+  if (!universityId) throw new Error("Universidad requerida");
+  if (!orderId) throw new Error("Order ID requerido");
+
+  const capture = await paypal.captureOrder(orderId);
+
+  if (capture.status !== "COMPLETED")
+    throw new Error("El pago no fue completado");
+
+  const capturedAmount = parseFloat(
+    capture.purchase_units[0].payments.captures[0].amount.value,
+  );
+
+  if (!capturedAmount || capturedAmount <= 0)
+    throw new Error("Monto capturado inválido");
+
+  const existing = await prisma.university.findFirst({
+    where: { id: universityId },
+  });
+  if (!existing) throw new Error("Universidad no encontrada");
+
+  const updated = await prisma.university.update({
+    where: { id: universityId },
+    data: { balance: { increment: capturedAmount } },
+  });
+
+  return {
+    balance: updated.balance,
+    amount: capturedAmount,
+    orderId,
+  };
+};
+
 module.exports = {
   getSubjects,
   getFaculties,
@@ -200,4 +279,8 @@ module.exports = {
   getStudents,
   getSubsidies,
   getPlatformEarnings,
+  rechargeUniversity,
+  getList,
+  createUniversityOrder,
+  captureUniversityOrder,
 };

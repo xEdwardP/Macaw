@@ -2,6 +2,21 @@ const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
 
+const CAREER_FACULTY_MAP = {
+  "Ingeniería en Ciencias de la Computación": "ICC",
+  "Medicina y Cirugía": "MED",
+  Derecho: "DER",
+  "Gestión Estratégica de Empresas": "GEE",
+  "Ingeniería Civil": "ICIV",
+  Psicología: "PSI",
+  Mercadotecnia: "MKT",
+  Arquitectura: "ARQ",
+  "Ciencias de la Comunicación": "COM",
+  Enfermería: "ENF",
+  "Cirugía Dental": "DEN",
+  "Ingeniería Industrial": "IIND",
+};
+
 const STUDENTS_DATA = [
   {
     name: "Hector de Jesus Villeda Lopez",
@@ -614,7 +629,7 @@ const STUDENTS_DATA = [
   },
 ];
 
-async function seedUsers(universityId) {
+async function seedUsers(universityId, faculties) {
   console.log("Seeding users...");
 
   const password = await bcrypt.hash("password123", 12);
@@ -671,10 +686,24 @@ async function seedUsers(universityId) {
   console.log("Coordinator created");
 
   for (const s of STUDENTS_DATA) {
+    const facultyCode = CAREER_FACULTY_MAP[s.career];
+    const facultyId = faculties[facultyCode]?.id || null;
+
+    if (!facultyId) console.warn(`Faculty not found for career: ${s.career}`);
+
     const student = await prisma.user.upsert({
       where: { email: s.email },
       update: {},
-      create: { ...s, password, role: "student", universityId },
+      create: {
+        name: s.name,
+        email: s.email,
+        password,
+        role: "student",
+        career: s.career,
+        quarter: s.quarter,
+        universityId,
+        facultyId,
+      },
     });
     await prisma.wallet.upsert({
       where: { userId: student.id },
@@ -687,4 +716,4 @@ async function seedUsers(universityId) {
   return password;
 }
 
-module.exports = { seedUsers };
+module.exports = { seedUsers, CAREER_FACULTY_MAP };

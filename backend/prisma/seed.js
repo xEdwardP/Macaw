@@ -13,8 +13,8 @@ async function main() {
   const university = await seedUniversity();
   const faculties = await seedFaculties(university.id);
   const subjects = await seedSubjects(faculties);
-  await seedUsers(university.id);
-  await seedTutors(university.id, subjects);
+  await seedUsers(university.id, faculties);
+  await seedTutors(university.id, subjects, faculties);
 
   console.log("Seed completado exitosamente");
 }

@@ -248,6 +248,59 @@ const sessionDisputeResolved = ({ userName, favorOf, amount }) =>
     }
   `);
 
+const withdrawalRequested = ({ adminName, tutorName, amount, paypalEmail }) =>
+  baseTemplate(`
+    <h2 style="margin:0 0 8px; color:#111827; font-size:22px;">Nueva solicitud de retiro</h2>
+    <p style="margin:0 0 24px; color:#6b7280; font-size:15px;">
+      Hola <strong>${adminName}</strong>, el tutor <strong>${tutorName}</strong>
+      ha solicitado un retiro.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb;">
+      ${infoRow("Tutor", tutorName)}
+      ${infoRow("Monto", `$${amount.toFixed(2)} USD`)}
+      ${infoRow("PayPal", paypalEmail)}
+    </table>
+    <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:14px 16px; margin-top:20px;">
+      <p style="margin:0; color:#1e40af; font-size:14px;">
+        Ingresa al panel de administracion para aprobar o rechazar esta solicitud.
+      </p>
+    </div>
+  `);
+
+const withdrawalApproved = ({ tutorName, amount, paypalEmail }) =>
+  baseTemplate(`
+    <h2 style="margin:0 0 8px; color:#111827; font-size:22px;">Retiro aprobado</h2>
+    <p style="margin:0 0 24px; color:#6b7280; font-size:15px;">
+      Hola <strong>${tutorName}</strong>, tu solicitud de retiro ha sido aprobada.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb;">
+      ${infoRow("Monto", `$${amount.toFixed(2)} USD`)}
+      ${infoRow("PayPal", paypalEmail)}
+    </table>
+    <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:14px 16px; margin-top:20px;">
+      <p style="margin:0; color:#065f46; font-size:14px;">
+        El pago sera enviado a tu cuenta de PayPal en las proximas horas.
+      </p>
+    </div>
+  `);
+
+const withdrawalRejected = ({ tutorName, amount, notes }) =>
+  baseTemplate(`
+    <h2 style="margin:0 0 8px; color:#111827; font-size:22px;">Solicitud de retiro rechazada</h2>
+    <p style="margin:0 0 24px; color:#6b7280; font-size:15px;">
+      Hola <strong>${tutorName}</strong>, tu solicitud de retiro ha sido rechazada.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb;">
+      ${infoRow("Monto", `$${amount.toFixed(2)} USD`)}
+      ${infoRow("Motivo", notes)}
+    </table>
+    <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:14px 16px; margin-top:20px;">
+      <p style="margin:0; color:#991b1b; font-size:14px;">
+        El monto ha sido devuelto a tu wallet. Puedes intentar nuevamente.
+      </p>
+    </div>
+  `);
+
 module.exports = {
   sessionBooked,
   sessionConfirmed,
@@ -256,4 +309,7 @@ module.exports = {
   sessionPendingConfirmation,
   sessionDisputed,
   sessionDisputeResolved,
+  withdrawalRequested,
+  withdrawalApproved,
+  withdrawalRejected,
 };

@@ -58,12 +58,29 @@ const recharge = async ({ userId, amount }) => {
 const addSubsidy = async ({ studentId, amount, reason, universityId }) => {
   if (!studentId || !amount || amount <= 0) throw new Error("Datos inválidos");
 
+  if (!universityId) throw new Error("Universidad requerida");
+
+  const university = await prisma.university.findUnique({
+    where: { id: universityId },
+  });
+  if (!university) throw new Error("Universidad no encontrada");
+
+  if (university.balance < parseFloat(amount))
+    throw new Error(
+      `Saldo insuficiente. La universidad tiene $${university.balance.toFixed(2)} disponibles`,
+    );
+
   const wallet = await prisma.wallet.findUnique({
     where: { userId: studentId },
   });
-  if (!wallet) throw new Error("Wallet no encontrada");
+  if (!wallet) throw new Error("Wallet del estudiante no encontrada");
 
   return await prisma.$transaction(async (tx) => {
+    await tx.university.update({
+      where: { id: universityId },
+      data: { balance: { decrement: parseFloat(amount) } },
+    });
+
     const updated = await tx.wallet.update({
       where: { userId: studentId },
       data: { balance: { increment: parseFloat(amount) } },
@@ -78,16 +95,14 @@ const addSubsidy = async ({ studentId, amount, reason, universityId }) => {
       },
     });
 
-    if (universityId) {
-      await tx.subsidy.create({
-        data: {
-          universityId,
-          studentId,
-          amount: parseFloat(amount),
-          reason,
-        },
-      });
-    }
+    await tx.subsidy.create({
+      data: {
+        universityId,
+        studentId,
+        amount: parseFloat(amount),
+        reason,
+      },
+    });
 
     return updated;
   });

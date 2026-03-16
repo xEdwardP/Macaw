@@ -23,8 +23,10 @@ const NAV_LINKS = {
   ],
   admin: [
     { label: "Dashboard", to: "/admin/dashboard" },
+    { label: "Universidades", to: "/admin/universities" },
     { label: "Usuarios", to: "/admin/users" },
     { label: "Sesiones", to: "/admin/sessions" },
+    { label: "Retiros", to: "/admin/withdrawals" },
   ],
 };
 

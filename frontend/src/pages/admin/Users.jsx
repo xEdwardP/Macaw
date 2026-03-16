@@ -1,7 +1,17 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Search, Users, Shield, GraduationCap, BookOpen } from "lucide-react";
+import {
+  Search,
+  Users,
+  Shield,
+  GraduationCap,
+  BookOpen,
+  Building,
+  ToggleLeft,
+  ToggleRight,
+} from "lucide-react";
+import toast from "react-hot-toast";
 import api from "../../services/api";
 
 const ROLE_CONFIG = {
@@ -16,7 +26,7 @@ const ROLE_CONFIG = {
     icon: GraduationCap,
   },
   university: {
-    label: "Universidad",
+    label: "Coordinador",
     color: "bg-purple-100 text-purple-700",
     icon: Users,
   },
@@ -26,32 +36,32 @@ const ROLE_CONFIG = {
 export default function AdminUsers() {
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("all");
+  const queryClient = useQueryClient();
 
-  const { data: students, isLoading: loadingStudents } = useQuery({
-    queryKey: ["all-students"],
-    queryFn: () => api.get("/universities/students").then((r) => r.data.data),
+  const { data: users, isLoading } = useQuery({
+    queryKey: ["all-users", search, role],
+    queryFn: () =>
+      api
+        .get("/users", {
+          params: {
+            search: search || undefined,
+            role: role === "all" ? undefined : role,
+          },
+        })
+        .then((r) => r.data.data),
   });
 
-  const { data: tutors, isLoading: loadingTutors } = useQuery({
-    queryKey: ["all-tutors"],
-    queryFn: () => api.get("/tutors").then((r) => r.data.data),
+  const { mutate: toggleActive } = useMutation({
+    mutationFn: (id) => api.put(`/users/${id}/toggle`),
+    onSuccess: () => {
+      toast.success("Usuario actualizado");
+      queryClient.invalidateQueries(["all-users"]);
+    },
+    onError: (err) =>
+      toast.error(err.response?.data?.message || "Error al actualizar"),
   });
 
-  const allUsers = [
-    ...(students || []).map((s) => ({ ...s, role: "student" })),
-    ...(tutors || []).map((t) => ({ ...t, role: "tutor" })),
-  ];
-
-  const filtered = allUsers.filter((u) => {
-    const matchSearch = search
-      ? u.name.toLowerCase().includes(search.toLowerCase()) ||
-        u.email.toLowerCase().includes(search.toLowerCase())
-      : true;
-    const matchRole = role === "all" ? true : u.role === role;
-    return matchSearch && matchRole;
-  });
-
-  const isLoading = loadingStudents || loadingTutors;
+  const allUsers = users || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -73,6 +83,11 @@ export default function AdminUsers() {
               label: "Tutores",
               value: allUsers.filter((u) => u.role === "tutor").length,
               color: "text-orange-600",
+            },
+            {
+              label: "Coordinadores",
+              value: allUsers.filter((u) => u.role === "university").length,
+              color: "text-purple-600",
             },
           ].map((stat) => (
             <div
@@ -111,6 +126,7 @@ export default function AdminUsers() {
             <option value="all">Todos los roles</option>
             <option value="student">Estudiantes</option>
             <option value="tutor">Tutores</option>
+            <option value="university">Coordinadores</option>
           </select>
         </div>
 
@@ -128,7 +144,7 @@ export default function AdminUsers() {
               </div>
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : allUsers.length === 0 ? (
           <div className="text-center py-20">
             <Users className="mx-auto text-gray-300 mb-4" size={48} />
             <h3 className="text-lg font-medium text-gray-900">
@@ -137,8 +153,8 @@ export default function AdminUsers() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filtered.map((user, i) => {
-              const config = ROLE_CONFIG[user.role];
+            {allUsers.map((user, i) => {
+              const config = ROLE_CONFIG[user.role] || ROLE_CONFIG.student;
               const Icon = config.icon;
               return (
                 <motion.div
@@ -146,12 +162,14 @@ export default function AdminUsers() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                  className={`bg-white rounded-xl border shadow-sm p-5 transition-all
+                    ${!user.isActive ? "border-red-100 opacity-60" : "border-gray-100"}`}
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className="w-10 h-10 rounded-full bg-gray-100 flex items-center
-                    justify-center text-gray-600 font-bold flex-shrink-0"
+                      className={`w-10 h-10 rounded-full flex items-center
+                    justify-center font-bold flex-shrink-0
+                    ${user.isActive ? "bg-gray-100 text-gray-600" : "bg-red-100 text-red-400"}`}
                     >
                       {user.name.charAt(0)}
                     </div>
@@ -165,10 +183,20 @@ export default function AdminUsers() {
                         >
                           {config.label}
                         </span>
+                        {!user.isActive && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600 font-medium">
+                            Inactivo
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm text-gray-500">{user.email}</p>
-                      {user.career && (
-                        <p className="text-xs text-gray-400">{user.career}</p>
+                      {user.faculty && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Building size={11} className="text-gray-300" />
+                          <span className="text-xs text-gray-400">
+                            {user.faculty.name}
+                          </span>
+                        </div>
                       )}
                     </div>
                     <div className="flex items-center gap-4 text-sm">
@@ -189,6 +217,21 @@ export default function AdminUsers() {
                           <p className="text-xs text-gray-400">rating</p>
                         </div>
                       )}
+                      <button
+                        onClick={() => toggleActive(user.id)}
+                        className={`transition-colors ${user.isActive ? "text-green-500 hover:text-red-400" : "text-red-400 hover:text-green-500"}`}
+                        title={
+                          user.isActive
+                            ? "Desactivar usuario"
+                            : "Activar usuario"
+                        }
+                      >
+                        {user.isActive ? (
+                          <ToggleRight size={24} />
+                        ) : (
+                          <ToggleLeft size={24} />
+                        )}
+                      </button>
                     </div>
                   </div>
                 </motion.div>
