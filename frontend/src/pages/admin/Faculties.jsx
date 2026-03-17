@@ -16,34 +16,36 @@ export default function AdminFaculties() {
   });
 
   // Crear facultad
-  const createMutation = useMutation(
-    () => api.post("/universities/faculties", { name, code }),
-    {
-      onSuccess: () => {
-        toast.success("Facultad creada correctamente");
-        setName("");
-        setCode("");
-        queryClient.invalidateQueries(["faculties"]);
-      },
-      onError: (err) => {
-        toast.error(err.response?.data?.message || "Error al crear facultad");
-      },
-    }
-  );
+ const createMutation = useMutation({
+  mutationFn: () =>
+    api.post("/universities/faculties", { name, code }),
+
+  onSuccess: () => {
+    toast.success("Facultad creada correctamente");
+    setName("");
+    setCode("");
+    queryClient.invalidateQueries({ queryKey: ["faculties"] });
+  },
+
+  onError: (err) => {
+    toast.error(err.response?.data?.message || "Error al crear facultad");
+  },
+});
 
   // Eliminar facultad
-  const deleteMutation = useMutation(
-    (id) => api.delete(`/universities/faculties/${id}`),
-    {
-      onSuccess: () => {
-        toast.success("Facultad eliminada");
-        queryClient.invalidateQueries(["faculties"]);
-      },
-      onError: (err) => {
-        toast.error(err.response?.data?.message || "Error al eliminar facultad");
-      },
-    }
-  );
+  const deleteMutation = useMutation({
+  mutationFn: (id) =>
+    api.delete(`/universities/faculties/${id}`),
+
+  onSuccess: () => {
+    toast.success("Facultad eliminada");
+    queryClient.invalidateQueries({ queryKey: ["faculties"] });
+  },
+
+  onError: (err) => {
+    toast.error(err.response?.data?.message || "Error al eliminar facultad");
+  },
+});
 
   return (
     <div className="p-6">
