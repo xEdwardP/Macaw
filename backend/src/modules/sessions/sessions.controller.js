@@ -86,6 +86,20 @@ const resolve = async (req, res) => {
   }
 };
 
+const getPaginated = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status } = req.query;
+    const result = await service.getPaginated(req.user, {
+      page,
+      limit,
+      status,
+    });
+    return response.ok(res, result);
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
 module.exports = {
   getAll,
   getOne,
@@ -96,4 +110,5 @@ module.exports = {
   studentConfirm,
   dispute,
   resolve,
+  getPaginated,
 };

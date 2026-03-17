@@ -9,6 +9,8 @@ import {
   X,
   CheckCircle,
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { sessionsService } from "../../services/sessions.service";
@@ -148,13 +150,18 @@ function DisputeModal({ session, onClose, onSubmit, isPending }) {
 
 export default function MySessions() {
   const [filter, setFilter] = useState("all");
+  const [page, setPage] = useState(1);
   const [reviewSession, setReviewSession] = useState(null);
   const [disputeSession, setDisputeSession] = useState(null);
   const queryClient = useQueryClient();
+  const limit = 10;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["sessions"],
-    queryFn: () => sessionsService.getAll().then((r) => r.data.data),
+    queryKey: ["sessions", page, filter],
+    queryFn: () =>
+      sessionsService
+        .getAll({ page, limit, status: filter === "all" ? undefined : filter })
+        .then((r) => r.data.data),
   });
 
   const { mutate: cancelSession } = useMutation({
@@ -201,9 +208,16 @@ export default function MySessions() {
       toast.error(err.response?.data?.message || "Error al enviar reporte"),
   });
 
-  const sessions = data || [];
-  const filtered =
-    filter === "all" ? sessions : sessions.filter((s) => s.status === filter);
+  const sessions = data?.data || [];
+  const total = data?.total || 0;
+  const totalPages = data?.totalPages || 1;
+  const from = total === 0 ? 0 : (page - 1) * limit + 1;
+  const to = Math.min(page * limit, total);
+
+  const handleFilterChange = (key) => {
+    setFilter(key);
+    setPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -223,7 +237,7 @@ export default function MySessions() {
           ].map((f) => (
             <button
               key={f.key}
-              onClick={() => setFilter(f.key)}
+              onClick={() => handleFilterChange(f.key)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
                 ${
                   filter === f.key
@@ -245,7 +259,7 @@ export default function MySessions() {
               </div>
             ))}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : sessions.length === 0 ? (
           <div className="text-center py-20">
             <Calendar className="mx-auto text-gray-300 mb-4" size={48} />
             <h3 className="text-lg font-medium text-gray-900">
@@ -256,151 +270,180 @@ export default function MySessions() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filtered.map((session, i) => {
-              const status = STATUS_LABELS[session.status];
-              const [year, month, day] = session.date
-                .split("T")[0]
-                .split("-")
-                .map(Number);
-              const date = new Date(year, month - 1, day).toLocaleDateString(
-                "es-HN",
-                {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                },
-              );
+          <>
+            <div className="space-y-4">
+              {sessions.map((session, i) => {
+                const status = STATUS_LABELS[session.status];
+                const [year, month, day] = session.date
+                  .split("T")[0]
+                  .split("-")
+                  .map(Number);
+                const date = new Date(year, month - 1, day).toLocaleDateString(
+                  "es-HN",
+                  {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  },
+                );
 
-              return (
-                <motion.div
-                  key={session.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="bg-white rounded-xl border border-gray-100 shadow-sm p-6"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <div className="flex items-center gap-3 mb-1">
-                        <h3 className="font-semibold text-gray-900">
-                          {session.subject.name}
-                        </h3>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full font-medium ${status.color}`}
-                        >
-                          {status.label}
-                        </span>
+                return (
+                  <motion.div
+                    key={session.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="bg-white rounded-xl border border-gray-100 shadow-sm p-6"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <h3 className="font-semibold text-gray-900">
+                            {session.subject.name}
+                          </h3>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full font-medium ${status.color}`}
+                          >
+                            {status.label}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          con {session.tutor.name}
+                        </p>
                       </div>
-                      <p className="text-sm text-gray-500">
-                        con {session.tutor.name}
-                      </p>
+                      <span className="text-orange-600 font-semibold">
+                        ${session.price}
+                      </span>
                     </div>
-                    <span className="text-orange-600 font-semibold">
-                      ${session.price}
-                    </span>
-                  </div>
 
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
-                    <div className="flex items-center gap-1">
-                      <Calendar size={14} className="text-gray-400" />
-                      {date}
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                      <div className="flex items-center gap-1">
+                        <Calendar size={14} className="text-gray-400" />
+                        {date}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock size={14} className="text-gray-400" />
+                        {session.startTime} - {session.endTime}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Clock size={14} className="text-gray-400" />
-                      {session.startTime} - {session.endTime}
-                    </div>
-                  </div>
 
-                  <div className="flex gap-3 pt-4 border-t border-gray-100 flex-wrap">
-                    {session.status === "confirmed" && session.meetingUrl && (
-                      <a
-                        href={session.meetingUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-                      >
-                        <Video size={14} />
-                        Unirse a la sesion
-                      </a>
-                    )}
-
-                    {session.status === "pending_confirmation" && (
-                      <>
-                        <button
-                          onClick={() => studentConfirm(session.id)}
-                          disabled={isConfirming}
-                          className="flex items-center gap-2 px-4 py-2 bg-purple-600
-                          hover:bg-purple-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+                    <div className="flex gap-3 pt-4 border-t border-gray-100 flex-wrap">
+                      {session.status === "confirmed" && session.meetingUrl && (
+                        <a
+                          href={session.meetingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
                         >
-                          <CheckCircle size={14} />
-                          Confirmar sesión recibida
-                        </button>
+                          <Video size={14} />
+                          Unirse a la sesion
+                        </a>
+                      )}
+
+                      {session.status === "pending_confirmation" && (
+                        <>
+                          <button
+                            onClick={() => studentConfirm(session.id)}
+                            disabled={isConfirming}
+                            className="flex items-center gap-2 px-4 py-2 bg-purple-600
+                            hover:bg-purple-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            <CheckCircle size={14} />
+                            Confirmar sesión recibida
+                          </button>
+                          <button
+                            onClick={() => setDisputeSession(session)}
+                            className="flex items-center gap-2 px-4 py-2 border border-red-200
+                            text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
+                          >
+                            <AlertTriangle size={14} />
+                            Reportar problema
+                          </button>
+                          <div
+                            className="w-full flex items-center gap-2 text-xs text-amber-600 bg-amber-50
+                          border border-amber-200 px-3 py-2 rounded-lg"
+                          >
+                            Si no confirmas en 24hrs el pago se liberará
+                            automáticamente
+                          </div>
+                        </>
+                      )}
+
+                      {session.status === "disputed" && (
+                        <div
+                          className="flex items-center gap-2 text-red-600 text-sm bg-red-50
+                        border border-red-200 px-3 py-2 rounded-lg"
+                        >
+                          <AlertTriangle size={14} />
+                          Disputa en revisión por el administrador
+                        </div>
+                      )}
+
+                      {["pending", "confirmed"].includes(session.status) && (
                         <button
-                          onClick={() => setDisputeSession(session)}
+                          onClick={() => {
+                            if (confirm("¿Cancelar esta sesión?"))
+                              cancelSession(session.id);
+                          }}
                           className="flex items-center gap-2 px-4 py-2 border border-red-200
                           text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
                         >
-                          <AlertTriangle size={14} />
-                          Reportar problema
+                          <X size={14} />
+                          Cancelar
                         </button>
-                        <div
-                          className="w-full flex items-center gap-2 text-xs text-amber-600 bg-amber-50
-                        border border-amber-200 px-3 py-2 rounded-lg"
+                      )}
+
+                      {session.status === "completed" && !session.review && (
+                        <button
+                          onClick={() => setReviewSession(session)}
+                          className="flex items-center gap-2 px-4 py-2 border border-orange-200
+                          text-orange-600 hover:bg-orange-50 text-sm rounded-lg transition-colors"
                         >
-                          Si no confirmas en 24hrs el pago se liberará
-                          automáticamente
+                          <Star size={14} />
+                          Dejar reseña
+                        </button>
+                      )}
+
+                      {session.status === "completed" && session.review && (
+                        <div className="flex items-center gap-2 text-green-600 text-sm">
+                          <CheckCircle size={14} />
+                          Reseña enviada
                         </div>
-                      </>
-                    )}
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
 
-                    {session.status === "disputed" && (
-                      <div
-                        className="flex items-center gap-2 text-red-600 text-sm bg-red-50
-                      border border-red-200 px-3 py-2 rounded-lg"
-                      >
-                        <AlertTriangle size={14} />
-                        Disputa en revisión por el administrador
-                      </div>
-                    )}
-
-                    {["pending", "confirmed"].includes(session.status) && (
-                      <button
-                        onClick={() => {
-                          if (confirm("¿Cancelar esta sesión?"))
-                            cancelSession(session.id);
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 border border-red-200
-                        text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
-                      >
-                        <X size={14} />
-                        Cancelar
-                      </button>
-                    )}
-
-                    {session.status === "completed" && !session.review && (
-                      <button
-                        onClick={() => setReviewSession(session)}
-                        className="flex items-center gap-2 px-4 py-2 border border-orange-200
-                        text-orange-600 hover:bg-orange-50 text-sm rounded-lg transition-colors"
-                      >
-                        <Star size={14} />
-                        Dejar reseña
-                      </button>
-                    )}
-
-                    {session.status === "completed" && session.review && (
-                      <div className="flex items-center gap-2 text-green-600 text-sm">
-                        <CheckCircle size={14} />
-                        Reseña enviada
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+            <div className="flex items-center justify-between mt-6">
+              <p className="text-sm text-gray-500">
+                Mostrando {from}-{to} de {total} sesiones
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                  disabled={page === 1}
+                  className="flex items-center gap-1 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft size={14} />
+                  Anterior
+                </button>
+                <span className="text-sm text-gray-500">
+                  {page} de {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={page === totalPages}
+                  className="flex items-center gap-1 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Siguiente
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
 

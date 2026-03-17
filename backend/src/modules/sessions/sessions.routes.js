@@ -5,7 +5,7 @@ const {
 } = require("../../middlewares/auth.middleware");
 const ctrl = require("./sessions.controller");
 
-router.get("/", authenticate, ctrl.getAll);
+router.get("/", authenticate, ctrl.getPaginated);
 router.get("/:id", authenticate, ctrl.getOne);
 router.post("/", authenticate, authorize("student"), ctrl.create);
 router.put("/:id/confirm", authenticate, authorize("tutor"), ctrl.confirm);

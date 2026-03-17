@@ -1,7 +1,7 @@
 import api from "./api";
 
 export const sessionsService = {
-  getAll: () => api.get("/sessions"),
+  getAll: (params) => api.get("/sessions", { params }),
   getOne: (id) => api.get(`/sessions/${id}`),
   create: (data) => api.post("/sessions", data),
   confirm: (id) => api.put(`/sessions/${id}/confirm`),

@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { sendMail } = require("../../config/mailer");
 const templates = require("../../utils/emailTemplates");
-const { getPlatformWallet } = require('../../config/platform');
+const { getPlatformWallet } = require("../../config/platform");
 
 const sessionInclude = {
   student: { select: { id: true, name: true, email: true, avatar: true } },
@@ -547,6 +547,35 @@ const resolve = async (sessionId, favorOf) => {
   });
 };
 
+const getPaginated = async (user, { page = 1, limit = 10, status }) => {
+  const where = {};
+
+  if (user.role === "student") where.studentId = user.id;
+  if (user.role === "tutor") where.tutorId = user.id;
+  if (status) where.status = status;
+
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  const [sessions, total] = await Promise.all([
+    prisma.session.findMany({
+      where,
+      include: sessionInclude,
+      orderBy: { date: "desc" },
+      take: parseInt(limit),
+      skip: offset,
+    }),
+    prisma.session.count({ where }),
+  ]);
+
+  return {
+    data: sessions,
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / parseInt(limit)),
+  };
+};
+
 module.exports = {
   getAll,
   getOne,
@@ -557,4 +586,5 @@ module.exports = {
   studentConfirm,
   dispute,
   resolve,
+  getPaginated,
 };

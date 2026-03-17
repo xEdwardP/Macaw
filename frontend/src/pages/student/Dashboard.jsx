@@ -26,8 +26,11 @@ export default function StudentDashboard() {
   const { user } = useAuthStore();
 
   const { data: sessions } = useQuery({
-    queryKey: ["sessions"],
-    queryFn: () => sessionsService.getAll().then((r) => r.data.data),
+    queryKey: ["sessions-dashboard"],
+    queryFn: () =>
+      sessionsService
+        .getAll({ page: 1, limit: 100 })
+        .then((r) => r.data.data.data),
   });
 
   const { data: wallet } = useQuery({
@@ -49,11 +52,9 @@ export default function StudentDashboard() {
     (s) => s.status === "completed",
   ).length;
   const recommendations = aiData?.recommendations || [];
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -65,7 +66,6 @@ export default function StudentDashboard() {
           <p className="text-gray-500 mt-1">Bienvenido de vuelta a Macaw</p>
         </motion.div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
             {
@@ -118,7 +118,6 @@ export default function StudentDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Upcoming sessions */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
@@ -196,9 +195,7 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Quick actions + AI */}
           <div className="space-y-4">
-            {/* Quick actions */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
               <h3 className="font-semibold text-gray-900 mb-4">
                 Acciones rápidas
@@ -246,7 +243,6 @@ export default function StudentDashboard() {
               </div>
             </div>
 
-            {/* AI Recommendations */}
             {recommendations.length > 0 && (
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
                 <h3 className="font-semibold text-gray-900 mb-1">
