@@ -10,6 +10,7 @@ const NAV_LINKS = {
     { label: "Sesiones", to: "/student/sessions" },
     { label: "Wallet", to: "/student/wallet" },
   ],
+  
   tutor: [
     { label: "Inicio", to: "/tutor/dashboard" },
     { label: "Sesiones", to: "/tutor/sessions" },
@@ -21,13 +22,15 @@ const NAV_LINKS = {
     { label: "Estudiantes", to: "/university/students" },
     { label: "Subsidios", to: "/university/subsidies" },
   ],
-  admin: [
-    { label: "Dashboard", to: "/admin/dashboard" },
-    { label: "Universidades", to: "/admin/universities" },
-    { label: "Usuarios", to: "/admin/users" },
-    { label: "Sesiones", to: "/admin/sessions" },
-    { label: "Retiros", to: "/admin/withdrawals" },
-  ],
+ admin: [
+  { label: "Dashboard", to: "/admin/dashboard" },
+  { label: "Universidades", to: "/admin/universities" },
+  { label: "Facultades", to: "/admin/faculties" },
+  { label: "Materias", to: "/admin/subjects" },   
+  { label: "Usuarios", to: "/admin/users" },
+  { label: "Sesiones", to: "/admin/sessions" },
+  { label: "Retiros", to: "/admin/withdrawals" },
+],
 };
 
 export default function Navbar() {

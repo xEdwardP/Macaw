@@ -4,8 +4,9 @@ const {
   authorize,
 } = require("../../middlewares/auth.middleware");
 const ctrl = require("./sessions.controller");
+console.log(ctrl);
 
-router.get("/", authenticate, ctrl.getAll);
+router.get("/all", authenticate, ctrl.getAll);
 router.get("/:id", authenticate, ctrl.getOne);
 router.get("/", authenticate, ctrl.getPaginated);
 router.post("/", authenticate, authorize("student"), ctrl.create);
@@ -22,3 +23,4 @@ router.put("/:id/dispute", authenticate, authorize("student"), ctrl.dispute);
 router.put("/:id/resolve", authenticate, authorize("admin"), ctrl.resolve);
 
 module.exports = router;
+

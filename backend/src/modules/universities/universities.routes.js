@@ -95,4 +95,7 @@ router.delete(
   ctrl.removeSubjectFromFaculty,
 );
 
+
+
+
 module.exports = router;

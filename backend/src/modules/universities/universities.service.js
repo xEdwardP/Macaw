@@ -19,9 +19,30 @@ const getSubjects = async ({ search }) => {
   });
 };
 
-const createSubject = async ({ name, code, area, universityId }) => {
+const createSubject = async ({
+  name,
+  code,
+  quarter,
+  credits,
+  isGeneral,
+}) => {
+  if (!name || !code)
+    throw new Error("Datos incompletos");
+
+  const exists = await prisma.subject.findUnique({
+    where: { code },
+  });
+
+  if (exists) throw new Error("El código ya existe");
+
   return await prisma.subject.create({
-    data: { name, code, area, universityId },
+    data: {
+      name,
+      code,
+      quarter: quarter ?? null,
+      credits: credits ?? null,
+      isGeneral: !!isGeneral,
+    },
   });
 };
 
@@ -342,7 +363,43 @@ const removeSubjectFromFaculty = async (facultyId, subjectId) => {
   return await prisma.facultySubject.delete({ where: { id: existing.id } });
 };
 
+const updateSubject = async (id, data) => {
+  const subject = await prisma.subject.findUnique({
+    where: { id },
+  });
+
+  if (!subject) throw new Error("Materia no encontrada");
+
+  return await prisma.subject.update({
+    where: { id },
+    data,
+  });
+};
+
+const deleteSubject = async (id) => {
+  const subject = await prisma.subject.findUnique({
+    where: { id },
+  });
+
+  if (!subject) throw new Error("Materia no encontrada");
+
+  const assigned = await prisma.facultySubject.findFirst({
+    where: { subjectId: id },
+  });
+
+  if (assigned)
+    throw new Error(
+      "No puedes eliminar una materia asignada a una facultad"
+    );
+
+  return await prisma.subject.delete({
+    where: { id },
+  });
+};
+
 module.exports = {
+  updateSubject,
+deleteSubject,
   getSubjects,
   getFaculties,
   getSubjectsByFaculty,

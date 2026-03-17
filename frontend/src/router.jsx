@@ -21,6 +21,8 @@ import AdminUsers from "./pages/admin/Users";
 import AdminSessions from "./pages/admin/Sessions";
 import AdminWithdrawals from "./pages/admin/Withdrawals";
 import AdminUniversities from "./pages/admin/Universities";
+import AdminFaculties from "./pages/admin/Faculties";
+import AdminSubjects from "./pages/admin/Subjects";
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, token } = useAuthStore();
@@ -218,6 +220,25 @@ export default function AppRouter() {
           </ProtectedRoute>
         }
       />
+
+      {/* Admin Routes */}
+      <Route
+  path="/admin/faculties"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminFaculties />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/admin/subjects"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminSubjects />
+    </ProtectedRoute>
+  }
+/>
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

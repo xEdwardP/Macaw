@@ -86,17 +86,6 @@ const resolve = async (req, res) => {
   }
 };
 
-module.exports = {
-  getAll,
-  getOne,
-  create,
-  confirm,
-  cancel,
-  complete,
-  studentConfirm,
-  dispute,
-  resolve,
-};
 
 
 const getPaginated = async (req, res) => {
@@ -107,4 +96,17 @@ const getPaginated = async (req, res) => {
   } catch (err) {
     return response.error(res, err.message);
   }
+};
+
+module.exports = {
+  getAll,
+  getOne,
+  create,
+  confirm,
+  cancel,
+  complete,
+  studentConfirm,
+  dispute,
+  resolve,
+  getPaginated
 };

@@ -158,6 +158,26 @@ const removeSubjectFromFaculty = async (req, res) => {
     return response.error(res, err.message);
   }
 };
+const updateSubject = async (req, res) => {
+  try {
+    const result = await service.updateSubject(
+      req.params.id,
+      req.body
+    );
+    return response.ok(res, result, "Materia actualizada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const deleteSubject = async (req, res) => {
+  try {
+    await service.deleteSubject(req.params.id);
+    return response.ok(res, null, "Materia eliminada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
 
 
 
@@ -179,4 +199,6 @@ module.exports = {
   deleteFaculty,
   assignSubjectToFaculty,
   removeSubjectFromFaculty,
+  updateSubject,
+  deleteSubject
 };
