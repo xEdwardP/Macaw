@@ -1,82 +1,117 @@
-import { useEffect, useState } from "react";
+// frontend/src/pages/admin/AdminFaculties.jsx
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../services/api";
+import toast from "react-hot-toast";
 
 export default function AdminFaculties() {
-  const [faculties, setFaculties] = useState([]);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+  const queryClient = useQueryClient();
 
-  const loadFaculties = async () => {
-    const res = await api.get("/universities/faculties");
-    setFaculties(res.data.data);
-  };
+  // Cargar facultades
+  const { data: faculties = [], isLoading } = useQuery({
+    queryKey: ["faculties"],
+    queryFn: () => api.get("/universities/faculties").then((res) => res.data.data),
+  });
 
-  useEffect(() => {
-    loadFaculties();
-  }, []);
+  // Crear facultad
+  const createMutation = useMutation(
+    () => api.post("/universities/faculties", { name, code }),
+    {
+      onSuccess: () => {
+        toast.success("Facultad creada correctamente");
+        setName("");
+        setCode("");
+        queryClient.invalidateQueries(["faculties"]);
+      },
+      onError: (err) => {
+        toast.error(err.response?.data?.message || "Error al crear facultad");
+      },
+    }
+  );
 
-  const createFaculty = async () => {
-    await api.post("/universities/faculties", { name, code });
-    setName("");
-    setCode("");
-    loadFaculties();
-  };
-
-  const deleteFaculty = async (id) => {
-    await api.delete(`/universities/faculties/${id}`);
-    loadFaculties();
-  };
+  // Eliminar facultad
+  const deleteMutation = useMutation(
+    (id) => api.delete(`/universities/faculties/${id}`),
+    {
+      onSuccess: () => {
+        toast.success("Facultad eliminada");
+        queryClient.invalidateQueries(["faculties"]);
+      },
+      onError: (err) => {
+        toast.error(err.response?.data?.message || "Error al eliminar facultad");
+      },
+    }
+  );
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Facultades</h1>
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4 flex-wrap">
         <input
           placeholder="Nombre"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="border p-2"
+          className="border p-2 rounded flex-1 min-w-[150px]"
         />
         <input
           placeholder="Código"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          className="border p-2"
+          className="border p-2 rounded min-w-[100px]"
         />
         <button
-          onClick={createFaculty}
-          className="bg-orange-500 text-white px-4 py-2"
+          onClick={() => createMutation.mutate()}
+          disabled={!name || !code || createMutation.isLoading}
+          className="bg-orange-500 text-white px-4 py-2 rounded disabled:opacity-50"
         >
-          Crear
+          {createMutation.isLoading ? "Creando..." : "Crear"}
         </button>
       </div>
 
-      <table className="w-full border">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Código</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {faculties.map((f) => (
-            <tr key={f.id}>
-              <td>{f.name}</td>
-              <td>{f.code}</td>
-              <td>
-                <button
-                  onClick={() => deleteFaculty(f.id)}
-                  className="text-red-500"
-                >
-                  Eliminar
-                </button>
-              </td>
-            </tr>
+      {isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-8 bg-gray-200 rounded animate-pulse"></div>
           ))}
-        </tbody>
-      </table>
+        </div>
+      ) : (
+        <table className="w-full border-collapse border border-gray-200">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="border px-3 py-2 text-left">Nombre</th>
+              <th className="border px-3 py-2 text-left">Código</th>
+              <th className="border px-3 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {faculties.map((f) => (
+              <tr key={f.id} className="hover:bg-gray-50">
+                <td className="border px-3 py-2">{f.name}</td>
+                <td className="border px-3 py-2">{f.code}</td>
+                <td className="border px-3 py-2">
+                  <button
+                    onClick={() => deleteMutation.mutate(f.id)}
+                    disabled={deleteMutation.isLoading}
+                    className="text-red-500 hover:underline disabled:opacity-50"
+                  >
+                    {deleteMutation.isLoading ? "Eliminando..." : "Eliminar"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {faculties.length === 0 && (
+              <tr>
+                <td colSpan={3} className="text-center py-4 text-gray-400">
+                  No hay facultades registradas
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
