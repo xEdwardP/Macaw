@@ -7,6 +7,7 @@ const morgan = require("morgan");
 const http = require("http");
 const { Server } = require("socket.io");
 const { scheduleAutoConfirm } = require("./jobs/autoConfirm");
+const { setIO } = require('./config/socket');
 
 const app = express();
 const server = http.createServer(app);
@@ -17,6 +18,9 @@ const io = new Server(server, {
     origin: process.env.CLIENT_URL || "http://localhost:5173",
   },
 });
+
+setIO(io);
+
 
 io.on("connection", (socket) => {
   socket.on("join", (userId) => {

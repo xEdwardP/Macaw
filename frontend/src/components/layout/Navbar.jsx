@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Bird, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "../../store/authStore";
+import { NotificationBell } from "./NotificationsBell"; 
 
 const NAV_LINKS = {
   student: [
@@ -10,7 +11,6 @@ const NAV_LINKS = {
     { label: "Sesiones", to: "/student/sessions" },
     { label: "Wallet", to: "/student/wallet" },
   ],
-  
   tutor: [
     { label: "Inicio", to: "/tutor/dashboard" },
     { label: "Sesiones", to: "/tutor/sessions" },
@@ -22,15 +22,15 @@ const NAV_LINKS = {
     { label: "Estudiantes", to: "/university/students" },
     { label: "Subsidios", to: "/university/subsidies" },
   ],
- admin: [
-  { label: "Dashboard", to: "/admin/dashboard" },
-  { label: "Universidades", to: "/admin/universities" },
-  { label: "Facultades", to: "/admin/faculties" },
-  { label: "Materias", to: "/admin/subjects" },   
-  { label: "Usuarios", to: "/admin/users" },
-  { label: "Sesiones", to: "/admin/sessions" },
-  { label: "Retiros", to: "/admin/withdrawals" },
-],
+  admin: [
+    { label: "Dashboard", to: "/admin/dashboard" },
+    { label: "Universidades", to: "/admin/universities" },
+    { label: "Facultades", to: "/admin/faculties" },
+    { label: "Materias", to: "/admin/subjects" },
+    { label: "Usuarios", to: "/admin/users" },
+    { label: "Sesiones", to: "/admin/sessions" },
+    { label: "Retiros", to: "/admin/withdrawals" },
+  ],
 };
 
 export default function Navbar() {
@@ -74,11 +74,15 @@ export default function Navbar() {
             ))}
           </div>
 
+          {/* Sección de usuario + campanita */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Campanita de notificaciones */}
+            {user && <NotificationBell userId={user.id} />}
+
             <div className="flex items-center gap-2">
               <div
                 className="w-8 h-8 rounded-full bg-orange-100 flex items-center
-              justify-center text-orange-600 font-bold text-sm"
+                justify-center text-orange-600 font-bold text-sm"
               >
                 {user?.name?.charAt(0)}
               </div>
@@ -124,10 +128,11 @@ export default function Navbar() {
               ))}
             </div>
             <div className="flex items-center justify-between px-4 pt-4 border-t border-gray-100">
+              {user && <NotificationBell userId={user.id} />}
               <div className="flex items-center gap-2">
                 <div
                   className="w-8 h-8 rounded-full bg-orange-100 flex items-center
-                justify-center text-orange-600 font-bold text-sm"
+                  justify-center text-orange-600 font-bold text-sm"
                 >
                   {user?.name?.charAt(0)}
                 </div>
