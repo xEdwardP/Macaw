@@ -13,6 +13,9 @@ const getSubjects = async ({ search }) => {
   return await prisma.subject.findMany({
     where,
     orderBy: { name: "asc" },
+    include: {
+      faculties: true,
+    },
   });
 };
 

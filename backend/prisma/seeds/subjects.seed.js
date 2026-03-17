@@ -148,7 +148,7 @@ const SUBJECTS_BY_FACULTY = {
 { name: 'Redacción Periodística', code: 'COM022', quarter: 5, credits: 3 },
 { name: 'Administración de Medios', code: 'COM023', quarter: 5, credits: 3 },
 { name: 'Comunicación e Iglesia', code: 'COM024', quarter: 5, credits: 3 },
-{ name: 'Ciencia y Tecnología', code: 'COM025', quarter: 5, credits: 3 },
+
 
 { name: 'Televisión', code: 'COM026', quarter: 6, credits: 3 },
 { name: 'Taller de Entrevista y Reportaje', code: 'COM027', quarter: 6, credits: 3 },
@@ -174,7 +174,7 @@ const SUBJECTS_BY_FACULTY = {
 
 { name: 'Relaciones Humanas', code: 'COM046', quarter: 10, credits: 3 },
 { name: 'Comunicación y Desarrollo', code: 'COM047', quarter: 10, credits: 3 },
-{ name: 'Mercadotecnia Social', code: 'COM048', quarter: 10, credits: 3 },
+
 { name: 'Taller de Redacción Publicitaria', code: 'COM049', quarter: 10, credits: 3 },
 
 { name: 'Programas Informativos para Radio y Televisión', code: 'COM051', quarter: 11, credits: 3 },
@@ -341,20 +341,13 @@ const SUBJECTS_BY_FACULTY = {
 
 
 
-{ name: 'Contabilidad Administrativa I', code: 'GEE017', quarter: 4, credits: 3 },
 { name: 'Psicología Empresarial', code: 'GEE020', quarter: 4, credits: 3 },
 
 { name: 'Contabilidad Administrativa II', code: 'GEE022', quarter: 5, credits: 3 },
-{ name: 'Administración Financiera I', code: 'GEE023', quarter: 5, credits: 3 },
 
-{ name: 'Administración de Recursos Humanos', code: 'GEE025', quarter: 5, credits: 3 },
 
-{ name: 'Investigación de Mercados I', code: 'GEE026', quarter: 6, credits: 3 },
-{ name: 'Administración Financiera II', code: 'GEE028', quarter: 6, credits: 3 },
-{ name: 'Legislación Empresarial', code: 'GEE029', quarter: 6, credits: 3 },
-{ name: 'Relaciones de Trabajo en la Empresa', code: 'GEE030', quarter: 6, credits: 3 },
 
-{ name: 'Investigación de Operaciones Aplicada a la Administración', code: 'GEE031', quarter: 7, credits: 3 },
+
 
 
 { name: 'Mercados Financieros', code: 'GEE034', quarter: 7, credits: 3 },
@@ -368,16 +361,16 @@ const SUBJECTS_BY_FACULTY = {
 
 { name: 'Administración de la Producción', code: 'GEE042', quarter: 9, credits: 3 },
 { name: 'Administración de Instituciones Financieras', code: 'GEE043', quarter: 9, credits: 3 },
-{ name: 'Comercio Internacional', code: 'GEE044', quarter: 9, credits: 3 },
+
 { name: 'Ecología Empresarial', code: 'GEE045', quarter: 9, credits: 3 },
 
 { name: 'Gestión Estratégica de Agroindustrias', code: 'GEE048', quarter: 10, credits: 3 },
 
 { name: 'Gestión Estratégica de Empresas Turísticas', code: 'GEE050', quarter: 10, credits: 3 },
 
-{ name: 'Formulación y Evaluación de Proyectos', code: 'GEE052', quarter: 11, credits: 3 },
+
 { name: 'Técnicas y Estrategias de Negociación', code: 'GEE053', quarter: 11, credits: 3 },
-{ name: 'Negocios Electrónicos', code: 'GEE054', quarter: 11, credits: 3 },
+
 
 { name: 'Seminario de Administración', code: 'GEE056', quarter: 12, credits: 3 },
 { name: 'Gerencia Estratégica de Proyectos', code: 'GEE057', quarter: 12, credits: 3 },
@@ -474,7 +467,7 @@ const SUBJECTS_BY_FACULTY = {
 { name: 'Metodos y tecnicas de investigacion', code: 'MAT101', quarter: 4, credits: 3},
 
 { name: 'Investigacion de Operaciones I', code: 'MAT101', quarter: 5, credits: 4},
-{ name: 'Ecuaciones Diferenciales', code: 'MAT101', quarter: 5, credits: 3},
+
 { name: 'Investigacion de Operaciones II', code: 'MAT101', quarter: 6, credits: 3},
 { name: 'Ingenieria de métodos I', code: 'MAT101', quarter: 6, credits: 3},
 { name: 'Produccion limpia y energías Alternativas', code: 'MAT101', quarter: 6, credits: 3},
@@ -514,21 +507,19 @@ const SUBJECTS_BY_FACULTY = {
 
 
 { name: 'Genética', code: 'GN101', quarter: 4, credits: 5 },
-{ name: 'Psicología Médica', code: 'PS101', quarter: 4, credits: 3 },
-{ name: 'Gestión de la Calidad Total', code: 'GS101', quarter: 5, credits: 3 },
-{ name: 'Histología', code: 'HS103', quarter: 5, credits: 6 },
+
 { name: 'Anatomía I', code: 'AN101', quarter: 5, credits: 7 },
 { name: 'Neuroanatomía I', code: 'NR101', quarter: 5, credits: 6 },
 
 
 { name: 'Anatomía II', code: 'AN102', quarter: 6, credits: 7 },
-{ name: 'Inmunología', code: 'IN101', quarter: 6, credits: 4 },
+
 { name: 'Neuroanatomía II', code: 'NR102', quarter: 6, credits: 6 },
 { name: 'Introducción a la Salud Pública', code: 'IN102', quarter: 6, credits: 5 },
 { name: 'Fisiología I', code: 'FS102', quarter: 7, credits: 6 },
 
 { name: 'Parasitología Médica', code: 'PR101', quarter: 7, credits: 4 },
-{ name: 'Epidemiología', code: 'EP101', quarter: 7, credits: 4 },
+
 { name: 'Medicina Basada en Evidencia', code: 'MD101', quarter: 8, credits: 3 },
 { name: 'Fisiología II', code: 'FS103', quarter: 8, credits: 6 },
 
@@ -588,32 +579,26 @@ const SUBJECTS_BY_FACULTY = {
 
 { name: 'Comportamiento del Consumidor', code: 'MKT030', quarter: 6, credits: 3 },
 
-
-
-{ name: 'Investigación de Operaciones Aplicada a la Administración', code: 'MKT036', quarter: 8, credits: 3 },
-{ name: 'Administración Financiera II', code: 'MKT037', quarter: 8, credits: 3 },
 { name: 'Promoción de Ventas', code: 'MKT038', quarter: 8, credits: 3 },
 { name: 'Políticas de Mercadotecnia', code: 'MKT039', quarter: 8, credits: 3 },
 { name: 'Publicidad II', code: 'MKT040', quarter: 8, credits: 3 },
 
 { name: 'Análisis de Precios', code: 'MKT041', quarter: 9, credits: 3 },
-{ name: 'Mercadotecnia Social', code: 'MKT043', quarter: 9, credits: 3 },
+
 { name: 'Mercadotecnia de Servicios', code: 'MKT044', quarter: 9, credits: 3 },
 { name: 'Negocios Int. y Desarrollo de Franquicias', code: 'MKT045', quarter: 9, credits: 3 },
 
-{ name: 'Gestión de la Calidad Total', code: 'MKT046', quarter: 10, credits: 3 },
+
 { name: 'Distribución y Logística', code: 'MKT047', quarter: 10, credits: 3 },
 { name: 'Mercadotecnia Turística', code: 'MKT048', quarter: 10, credits: 3 },
 { name: 'Mercadotecnia para Instituciones Financieras', code: 'MKT049', quarter: 10, credits: 3 },
-{ name: 'Comercio Internacional', code: 'MKT050', quarter: 10, credits: 3 },
+
 
 { name: 'Desarrollo de Productos', code: 'MKT052', quarter: 11, credits: 3 },
 { name: 'Diseño Publicitario', code: 'MKT053', quarter: 11, credits: 3 },
-{ name: 'Mercadotecnia Internacional', code: 'MKT055', quarter: 11, credits: 3 },
 
-{ name: 'Formulación y Evaluación de Proyectos', code: 'MKT057', quarter: 12, credits: 3 },
+
 { name: 'Seminario de Mercadotecnia', code: 'MKT058', quarter: 12, credits: 3 },
-{ name: 'Negocios Electrónicos', code: 'MKT059', quarter: 12, credits: 3 },
 
   ],
   PSI: [

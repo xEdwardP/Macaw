@@ -95,7 +95,7 @@ export default function BookSession() {
       }),
     onSuccess: () => {
       toast.success("Sesion reservada exitosamente");
-      navigate("/student/sessions");
+      setTimeout(() => navigate("/student/sessions"), 1000);
     },
     onError: (err) => {
       toast.error(err.response?.data?.message || "Error al reservar");

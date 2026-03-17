@@ -20,6 +20,7 @@ CREATE TABLE "University" (
     "domain" TEXT NOT NULL,
     "logo" TEXT,
     "commissionRate" DOUBLE PRECISION NOT NULL DEFAULT 0.10,
+    "balance" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "University_pkey" PRIMARY KEY ("id")
@@ -62,6 +63,7 @@ CREATE TABLE "FacultySubject" (
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "universityId" TEXT,
+    "facultyId" TEXT,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
@@ -237,6 +239,9 @@ ALTER TABLE "FacultySubject" ADD CONSTRAINT "FacultySubject_subjectId_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_universityId_fkey" FOREIGN KEY ("universityId") REFERENCES "University"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_facultyId_fkey" FOREIGN KEY ("facultyId") REFERENCES "Faculty"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "WithdrawalRequest" ADD CONSTRAINT "WithdrawalRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
