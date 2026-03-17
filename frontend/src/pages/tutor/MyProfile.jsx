@@ -1,8 +1,19 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
-import { Star, BookOpen, Clock, Plus, X, Save, Building } from "lucide-react";
+import {
+  Star,
+  BookOpen,
+  Clock,
+  Plus,
+  X,
+  Save,
+  Building,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { tutorsService } from "../../services/tutors.service";
 import { useAuthStore } from "../../store/authStore";
@@ -36,11 +47,17 @@ const HOURS = [
   "20:00",
   "21:00",
 ];
+const PAGE_SIZE = 12;
 
 export default function TutorMyProfile() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("profile");
+
+  const [filterFaculty, setFilterFaculty] = useState(""); // facultyId | "general" | ""
+  const [filterQuarter, setFilterQuarter] = useState("");
+  const [filterSearch, setFilterSearch] = useState("");
+  const [subjectPage, setSubjectPage] = useState(1);
 
   const { data: tutor, isLoading } = useQuery({
     queryKey: ["tutor", user?.id],
@@ -48,9 +65,14 @@ export default function TutorMyProfile() {
     enabled: !!user?.id,
   });
 
-  const { data: subjects } = useQuery({
+  const { data: allSubjects = [] } = useQuery({
     queryKey: ["subjects"],
     queryFn: () => api.get("/universities/subjects").then((r) => r.data.data),
+  });
+
+  const { data: faculties = [] } = useQuery({
+    queryKey: ["faculties"],
+    queryFn: () => api.get("/universities/faculties").then((r) => r.data.data),
   });
 
   const { register: regProfile, handleSubmit: submitProfile } = useForm({
@@ -113,22 +135,66 @@ export default function TutorMyProfile() {
     });
 
   const addSlot = () => {
-    const exists = availability.find((s) => s.dayOfWeek === newSlot.dayOfWeek);
-    if (exists) {
+    if (availability.find((s) => s.dayOfWeek === newSlot.dayOfWeek)) {
       toast.error("Ya tienes un horario para ese día");
       return;
     }
     setAvailability([...availability, { ...newSlot }]);
   };
-
-  const removeSlot = (dayOfWeek) => {
+  const removeSlot = (dayOfWeek) =>
     setAvailability(availability.filter((s) => s.dayOfWeek !== dayOfWeek));
-  };
 
   const existingSubjectIds =
     tutor?.tutorProfile?.subjects?.map((s) => s.subject.id) || [];
-  const availableSubjects = (subjects || []).filter(
-    (s) => !existingSubjectIds.includes(s.id),
+
+  const filteredSubjects = useMemo(() => {
+    return allSubjects.filter((s) => {
+      if (existingSubjectIds.includes(s.id)) return false;
+
+      if (filterFaculty === "general") {
+        if (!s.isGeneral) return false;
+      } else if (filterFaculty) {
+        const belongsToFaculty = (s.faculties || []).some(
+          (f) => f.facultyId === filterFaculty,
+        );
+        if (!belongsToFaculty) return false;
+      }
+
+      if (filterQuarter && s.quarter !== parseInt(filterQuarter)) return false;
+
+      if (
+        filterSearch &&
+        !s.name.toLowerCase().includes(filterSearch.toLowerCase())
+      )
+        return false;
+
+      return true;
+    });
+  }, [
+    allSubjects,
+    existingSubjectIds,
+    filterFaculty,
+    filterQuarter,
+    filterSearch,
+  ]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredSubjects.length / PAGE_SIZE),
+  );
+  const pagedSubjects = filteredSubjects.slice(
+    (subjectPage - 1) * PAGE_SIZE,
+    subjectPage * PAGE_SIZE,
+  );
+
+  const resetPage = () => setSubjectPage(1);
+
+  const quarterOptions = useMemo(
+    () =>
+      [...new Set(allSubjects.map((s) => s.quarter))]
+        .filter(Boolean)
+        .sort((a, b) => a - b),
+    [allSubjects],
   );
 
   if (isLoading) {
@@ -144,10 +210,7 @@ export default function TutorMyProfile() {
       <div className="max-w-3xl mx-auto px-6 py-8">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
           <div className="flex items-center gap-4">
-            <div
-              className="w-16 h-16 rounded-full bg-orange-100 flex items-center
-            justify-center text-orange-600 font-bold text-2xl"
-            >
+            <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-2xl">
               {user?.name?.charAt(0)}
             </div>
             <div>
@@ -186,12 +249,11 @@ export default function TutorMyProfile() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
-                ${
-                  activeTab === tab.key
-                    ? "bg-orange-600 text-white"
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"
-                }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === tab.key
+                  ? "bg-orange-600 text-white"
+                  : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"
+              }`}
             >
               {tab.label}
             </button>
@@ -216,8 +278,7 @@ export default function TutorMyProfile() {
                   {...regProfile("bio")}
                   rows={4}
                   placeholder="Cuéntale a los estudiantes sobre ti, tu experiencia y metodología..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg
-                  focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
                 />
               </div>
               <div>
@@ -230,16 +291,13 @@ export default function TutorMyProfile() {
                   min="1"
                   max="100"
                   step="0.5"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg
-                  focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
               <button
                 type="submit"
                 disabled={savingProfile}
-                className="flex items-center gap-2 px-6 py-2 bg-orange-600
-                hover:bg-orange-700 text-white rounded-lg transition-colors
-                disabled:opacity-50 text-sm font-medium"
+                className="flex items-center gap-2 px-6 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors disabled:opacity-50 text-sm font-medium"
               >
                 <Save size={16} />
                 {savingProfile ? "Guardando..." : "Guardar cambios"}
@@ -257,19 +315,18 @@ export default function TutorMyProfile() {
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <BookOpen size={16} className="text-orange-600" />
-                Mis materias
+                Mis materias ({tutor?.tutorProfile?.subjects?.length || 0})
               </h3>
-              {tutor?.tutorProfile?.subjects?.length === 0 ? (
+              {!tutor?.tutorProfile?.subjects?.length ? (
                 <p className="text-sm text-gray-400">
                   No tienes materias agregadas aún
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {tutor?.tutorProfile?.subjects?.map((s) => (
+                  {tutor.tutorProfile.subjects.map((s) => (
                     <div
                       key={s.subject.id}
-                      className="flex items-center gap-2 bg-orange-50 border
-                      border-orange-100 px-3 py-1.5 rounded-full"
+                      className="flex items-center gap-2 bg-orange-50 border border-orange-100 px-3 py-1.5 rounded-full"
                     >
                       <span className="text-sm text-orange-700">
                         {s.subject.name}
@@ -290,13 +347,98 @@ export default function TutorMyProfile() {
               <h3 className="font-semibold text-gray-900 mb-4">
                 Agregar materia
               </h3>
-              {availableSubjects.length === 0 ? (
-                <p className="text-sm text-gray-400">
-                  Ya tienes todas las materias disponibles
+
+              <div className="space-y-3 mb-4">
+                <div className="relative">
+                  <Search
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre..."
+                    value={filterSearch}
+                    onChange={(e) => {
+                      setFilterSearch(e.target.value);
+                      resetPage();
+                    }}
+                    className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Facultad
+                    </label>
+                    <select
+                      value={filterFaculty}
+                      onChange={(e) => {
+                        setFilterFaculty(e.target.value);
+                        resetPage();
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                    >
+                      <option value="">Todas</option>
+                      <option value="general">Materias generales</option>
+                      {faculties.map((f) => (
+                        <option key={f.id} value={f.id}>
+                          {f.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Trimestre
+                    </label>
+                    <select
+                      value={filterQuarter}
+                      onChange={(e) => {
+                        setFilterQuarter(e.target.value);
+                        resetPage();
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                    >
+                      <option value="">Todos</option>
+                      {quarterOptions.map((q) => (
+                        <option key={q} value={q}>
+                          Trimestre {q}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-gray-400">
+                  {filteredSubjects.length} materia
+                  {filteredSubjects.length !== 1 ? "s" : ""}
+                </p>
+                {(filterFaculty || filterQuarter || filterSearch) && (
+                  <button
+                    onClick={() => {
+                      setFilterFaculty("");
+                      setFilterQuarter("");
+                      setFilterSearch("");
+                      resetPage();
+                    }}
+                    className="text-xs text-orange-500 hover:text-orange-700 transition-colors"
+                  >
+                    Limpiar filtros
+                  </button>
+                )}
+              </div>
+
+              {pagedSubjects.length === 0 ? (
+                <p className="text-sm text-gray-400 py-6 text-center">
+                  No hay materias con esos filtros
                 </p>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
-                  {availableSubjects.map((subject) => (
+                  {pagedSubjects.map((subject) => (
                     <button
                       key={subject.id}
                       onClick={() =>
@@ -305,21 +447,51 @@ export default function TutorMyProfile() {
                           level: "intermediate",
                         })
                       }
-                      className="flex items-center gap-2 p-3 border border-gray-200
-                      rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-all text-left"
+                      className="flex items-start gap-2 p-3 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-all text-left"
                     >
                       <Plus
                         size={14}
-                        className="text-orange-600 flex-shrink-0"
+                        className="text-orange-600 flex-shrink-0 mt-0.5"
                       />
-                      <div>
-                        <p className="text-sm font-medium text-gray-700">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-700 leading-tight truncate">
                           {subject.name}
                         </p>
-                        <p className="text-xs text-gray-400">{subject.area}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Trim. {subject.quarter} · {subject.credits} cr.
+                          {subject.isGeneral && (
+                            <span className="ml-1 text-orange-400">
+                              · General
+                            </span>
+                          )}
+                        </p>
                       </div>
                     </button>
                   ))}
+                </div>
+              )}
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                  <button
+                    onClick={() => setSubjectPage((p) => Math.max(1, p - 1))}
+                    disabled={subjectPage === 1}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft size={14} /> Anterior
+                  </button>
+                  <span className="text-xs text-gray-500">
+                    Página {subjectPage} de {totalPages}
+                  </span>
+                  <button
+                    onClick={() =>
+                      setSubjectPage((p) => Math.min(totalPages, p + 1))
+                    }
+                    disabled={subjectPage === totalPages}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Siguiente <ChevronRight size={14} />
+                  </button>
                 </div>
               )}
             </div>
@@ -387,8 +559,7 @@ export default function TutorMyProfile() {
                         dayOfWeek: parseInt(e.target.value),
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg
-                    focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                   >
                     {DAYS.slice(1).map((day, i) => (
                       <option key={i + 1} value={i + 1}>
@@ -406,8 +577,7 @@ export default function TutorMyProfile() {
                     onChange={(e) =>
                       setNewSlot({ ...newSlot, startTime: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg
-                    focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                   >
                     {HOURS.map((h) => (
                       <option key={h} value={h}>
@@ -425,8 +595,7 @@ export default function TutorMyProfile() {
                     onChange={(e) =>
                       setNewSlot({ ...newSlot, endTime: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg
-                    focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                   >
                     {HOURS.map((h) => (
                       <option key={h} value={h}>
@@ -438,20 +607,16 @@ export default function TutorMyProfile() {
               </div>
               <button
                 onClick={addSlot}
-                className="flex items-center gap-2 px-4 py-2 border border-orange-300
-                text-orange-600 hover:bg-orange-50 rounded-lg transition-colors text-sm font-medium"
+                className="flex items-center gap-2 px-4 py-2 border border-orange-300 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors text-sm font-medium"
               >
-                <Plus size={16} />
-                Agregar horario
+                <Plus size={16} /> Agregar horario
               </button>
             </div>
 
             <button
               onClick={() => saveAvailability(availability)}
               disabled={savingAvailability}
-              className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white
-              font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center
-              justify-center gap-2"
+              className="w-full py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <Save size={16} />
               {savingAvailability ? "Guardando..." : "Guardar disponibilidad"}
