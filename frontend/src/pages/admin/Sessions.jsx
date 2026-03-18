@@ -137,7 +137,7 @@ export default function AdminSessions() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Sesiones</h1>
         <p className="text-gray-500 mb-8">
           Todas las sesiones de la plataforma
@@ -152,7 +152,7 @@ export default function AdminSessions() {
             </p>
             <button
               onClick={() => handleFilterChange("disputed")}
-              className="ml-auto text-xs text-red-600 underline hover:text-red-800"
+              className="ml-auto text-xs text-red-600 underline hover:text-red-800 flex-shrink-0"
             >
               Ver disputas
             </button>
@@ -202,7 +202,7 @@ export default function AdminSessions() {
             <button
               key={f.key}
               onClick={() => handleFilterChange(f.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all
                 ${filter === f.key ? "bg-orange-600 text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"}`}
             >
               {f.label}
@@ -256,22 +256,22 @@ export default function AdminSessions() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className={`bg-white rounded-xl border shadow-sm p-5
+                    className={`bg-white rounded-xl border shadow-sm p-4 sm:p-5
                       ${session.status === "disputed" ? "border-red-200 bg-red-50/30" : "border-gray-100"}`}
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
                           <h3 className="font-medium text-gray-900">
                             {session.subject.name}
                           </h3>
                           <span
-                            className={`text-xs px-2 py-0.5 rounded-full font-medium ${status.color}`}
+                            className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${status.color}`}
                           >
                             {status.label}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 truncate">
                           {session.student.name} → {session.tutor.name}
                         </p>
                         {session.status === "disputed" && session.notes && (
@@ -280,18 +280,18 @@ export default function AdminSessions() {
                           </p>
                         )}
                       </div>
-                      <span className="text-orange-600 font-semibold">
+                      <span className="text-orange-600 font-semibold flex-shrink-0">
                         ${session.price}
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-sm text-gray-400">
                       <div className="flex items-center gap-1">
-                        <Calendar size={13} />
-                        {date}
+                        <Calendar size={13} className="flex-shrink-0" />
+                        <span className="truncate">{date}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Clock size={13} />
+                        <Clock size={13} className="flex-shrink-0" />
                         {session.startTime} - {session.endTime}
                       </div>
                     </div>
@@ -376,7 +376,7 @@ export default function AdminSessions() {
               })}
             </div>
 
-            <div className="flex items-center justify-between mt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-3">
               <p className="text-sm text-gray-500">
                 Mostrando {from}-{to} de {total} sesiones
               </p>

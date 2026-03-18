@@ -64,8 +64,7 @@ function RechargeModal({ university, onClose, onSubmit, isPending }) {
               min="1"
               step="0.01"
               placeholder="0.00"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg
-              focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             {errors.amount && (
               <p className="text-red-500 text-xs mt-1">
@@ -85,16 +84,14 @@ function RechargeModal({ university, onClose, onSubmit, isPending }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 border border-gray-300 text-gray-700
-              rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white
-              rounded-lg transition-colors text-sm disabled:opacity-50"
+              className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
             >
               {isPending ? "Recargando..." : "Recargar balance"}
             </button>
@@ -127,7 +124,7 @@ export default function AdminUniversities() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Universidades</h1>
         <p className="text-gray-500 mb-8">
           Gestiona las universidades y sus balances
@@ -157,62 +154,59 @@ export default function AdminUniversities() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-6"
+                className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-6"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-12 h-12 rounded-xl bg-orange-100 flex items-center
-                    justify-center text-orange-600"
-                    >
-                      <Building size={24} />
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 flex-shrink-0">
+                      <Building size={20} />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-gray-900 truncate">
                         {university.name}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 truncate">
                         {university.domain}
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={() => setRechargeUniversity(university)}
-                    className="flex items-center gap-2 px-4 py-2 bg-orange-600
-                    hover:bg-orange-700 text-white text-sm rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs sm:text-sm rounded-lg transition-colors flex-shrink-0"
                   >
                     <Plus size={14} />
-                    Recargar balance
+                    <span className="hidden sm:block">Recargar balance</span>
+                    <span className="sm:hidden">Recargar</span>
                   </button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-green-50 rounded-lg p-3 text-center">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                  <div className="bg-green-50 rounded-lg p-2 sm:p-3 text-center">
                     <div className="flex items-center justify-center gap-1 mb-1">
-                      <DollarSign size={16} className="text-green-600" />
+                      <DollarSign size={14} className="text-green-600" />
                       <span className="text-xs text-gray-500">Balance</span>
                     </div>
                     <p
-                      className={`text-xl font-bold ${university.balance > 0 ? "text-green-600" : "text-gray-400"}`}
+                      className={`text-base sm:text-xl font-bold ${university.balance > 0 ? "text-green-600" : "text-gray-400"}`}
                     >
                       ${university.balance?.toFixed(2) || "0.00"}
                     </p>
                   </div>
-                  <div className="bg-blue-50 rounded-lg p-3 text-center">
+                  <div className="bg-blue-50 rounded-lg p-2 sm:p-3 text-center">
                     <div className="flex items-center justify-center gap-1 mb-1">
-                      <Users size={16} className="text-blue-600" />
+                      <Users size={14} className="text-blue-600" />
                       <span className="text-xs text-gray-500">Estudiantes</span>
                     </div>
-                    <p className="text-xl font-bold text-blue-600">
+                    <p className="text-base sm:text-xl font-bold text-blue-600">
                       {university._count?.users || 0}
                     </p>
                   </div>
-                  <div className="bg-orange-50 rounded-lg p-3 text-center">
+                  <div className="bg-orange-50 rounded-lg p-2 sm:p-3 text-center">
                     <div className="flex items-center justify-center gap-1 mb-1">
-                      <DollarSign size={16} className="text-orange-600" />
+                      <DollarSign size={14} className="text-orange-600" />
                       <span className="text-xs text-gray-500">Comision</span>
                     </div>
-                    <p className="text-xl font-bold text-orange-600">
+                    <p className="text-base sm:text-xl font-bold text-orange-600">
                       {(university.commissionRate * 100).toFixed(0)}%
                     </p>
                   </div>
