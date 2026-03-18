@@ -2,27 +2,40 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const paypal = require("../../config/paypal");
 
-const getSubjects = async ({ search }) => {
+const getSubjects = async ({ search, facultyId, page = 1, limit = 10 }) => {
   const where = {};
+
   if (search) {
     where.OR = [
       { name: { contains: search, mode: "insensitive" } },
       { code: { contains: search, mode: "insensitive" } },
     ];
   }
-  return await prisma.subject.findMany({
-    where,
-    orderBy: { name: "asc" },
-    include: {
-      faculties: true,
-    },
-  });
-};
 
-const createSubject = async ({ name, code, area, universityId }) => {
-  return await prisma.subject.create({
-    data: { name, code, area, universityId },
-  });
+  if (facultyId) {
+    where.faculties = { some: { facultyId } };
+  }
+
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  const [data, total] = await Promise.all([
+    prisma.subject.findMany({
+      where,
+      orderBy: { name: "asc" },
+      include: { faculties: true },
+      take: parseInt(limit),
+      skip: offset,
+    }),
+    prisma.subject.count({ where }),
+  ]);
+
+  return {
+    data,
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / parseInt(limit)),
+  };
 };
 
 const getAnalytics = async (user) => {
@@ -152,29 +165,57 @@ const getSubsidies = async (user) => {
   });
 };
 
-const getFaculties = async ({ universityId }) => {
+const getFaculties = async ({ universityId, page = 1, limit = 8 }) => {
   const where = universityId ? { universityId } : {};
-  return await prisma.faculty.findMany({
-    where,
-    orderBy: { name: "asc" },
-    include: {
-      _count: { select: { subjects: true } },
-    },
-  });
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  const [data, total] = await Promise.all([
+    prisma.faculty.findMany({
+      where,
+      orderBy: { name: "asc" },
+      include: { _count: { select: { subjects: true } } },
+      take: parseInt(limit),
+      skip: offset,
+    }),
+    prisma.faculty.count({ where }),
+  ]);
+
+  return {
+    data,
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / parseInt(limit)),
+  };
 };
 
-const getSubjectsByFaculty = async (facultyId) => {
-  const faculty = await prisma.faculty.findUnique({
-    where: { id: facultyId },
-    include: {
-      subjects: {
-        include: { subject: true },
-        orderBy: { subject: { quarter: "asc" } },
-      },
-    },
-  });
+const getSubjectsByFaculty = async (
+  facultyId,
+  { page = 1, limit = 8 } = {},
+) => {
+  const faculty = await prisma.faculty.findUnique({ where: { id: facultyId } });
   if (!faculty) throw new Error("Facultad no encontrada");
-  return faculty.subjects.map((fs) => fs.subject);
+
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  const [data, total] = await Promise.all([
+    prisma.facultySubject.findMany({
+      where: { facultyId },
+      include: { subject: true },
+      orderBy: { subject: { quarter: "asc" } },
+      take: parseInt(limit),
+      skip: offset,
+    }),
+    prisma.facultySubject.count({ where: { facultyId } }),
+  ]);
+
+  return {
+    data: data.map((fs) => fs.subject),
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / parseInt(limit)),
+  };
 };
 
 const getPlatformEarnings = async () => {
@@ -273,11 +314,139 @@ const captureUniversityOrder = async (universityId, orderId) => {
   };
 };
 
+const createFaculty = async ({ name, code }, user) => {
+  if (!name || !code) throw new Error("Nombre y código son requeridos");
+  return await prisma.faculty.create({
+    data: { name, code, universityId: user.universityId },
+    include: { _count: { select: { subjects: true } } },
+  });
+};
+
+const updateFaculty = async (id, { name, code }, user) => {
+  const faculty = await prisma.faculty.findUnique({ where: { id } });
+  if (!faculty) throw new Error("Facultad no encontrada");
+  if (faculty.universityId !== user.universityId)
+    throw new Error("No autorizado");
+  return await prisma.faculty.update({
+    where: { id },
+    data: { name, code },
+    include: { _count: { select: { subjects: true } } },
+  });
+};
+
+const deleteFaculty = async (id, user) => {
+  const faculty = await prisma.faculty.findUnique({ where: { id } });
+  if (!faculty) throw new Error("Facultad no encontrada");
+  if (faculty.universityId !== user.universityId)
+    throw new Error("No autorizado");
+  return await prisma.faculty.delete({ where: { id } });
+};
+
+const createSubject = async (
+  { name, code, quarter, credits, isGeneral, facultyId },
+  user,
+) => {
+  const existing = await prisma.subject.findUnique({ where: { code } });
+  if (existing)
+    throw new Error(`Ya existe una materia con el código "${code}"`);
+
+  const subject = await prisma.subject.create({
+    data: { name, code, quarter, credits, isGeneral },
+  });
+
+  if (facultyId) {
+    await prisma.facultySubject.create({
+      data: { facultyId, subjectId: subject.id },
+    });
+  }
+
+  return subject;
+};
+
+const updateSubject = async (
+  id,
+  { name, code, quarter, credits, isGeneral, facultyId },
+  user,
+) => {
+  if (code) {
+    const existing = await prisma.subject.findUnique({ where: { code } });
+    if (existing && existing.id !== id)
+      throw new Error(`Ya existe una materia con el código "${code}"`);
+  }
+
+  const subject = await prisma.subject.update({
+    where: { id },
+    data: {
+      name,
+      quarter,
+      credits,
+      isGeneral,
+      ...(code && { code }),
+    },
+    include: { faculties: true },
+  });
+
+  if (!isGeneral && facultyId) {
+    await prisma.facultySubject.deleteMany({ where: { subjectId: id } });
+    await prisma.facultySubject.create({ data: { facultyId, subjectId: id } });
+  }
+
+  if (isGeneral) {
+    await prisma.facultySubject.deleteMany({ where: { subjectId: id } });
+  }
+
+  return subject;
+};
+
+const deleteSubject = async (id, user) => {
+  const tutorCount = await prisma.tutorSubject.count({
+    where: { subjectId: id },
+  });
+  if (tutorCount > 0)
+    throw new Error(
+      "No se puede eliminar, hay tutores que imparten esta materia",
+    );
+
+  const sessionCount = await prisma.session.count({ where: { subjectId: id } });
+  if (sessionCount > 0)
+    throw new Error(
+      "No se puede eliminar, hay sesiones asociadas a esta materia",
+    );
+
+  await prisma.facultySubject.deleteMany({ where: { subjectId: id } });
+  return await prisma.subject.delete({ where: { id } });
+};
+
+const assignSubjectToFaculty = async (facultyId, subjectId, user) => {
+  const faculty = await prisma.faculty.findUnique({ where: { id: facultyId } });
+  if (!faculty) throw new Error("Facultad no encontrada");
+  if (faculty.universityId !== user.universityId)
+    throw new Error("No autorizado");
+  return await prisma.facultySubject.create({ data: { facultyId, subjectId } });
+};
+
+const removeSubjectFromFaculty = async (facultyId, subjectId, user) => {
+  const faculty = await prisma.faculty.findUnique({ where: { id: facultyId } });
+  if (!faculty) throw new Error("Facultad no encontrada");
+  if (faculty.universityId !== user.universityId)
+    throw new Error("No autorizado");
+  return await prisma.facultySubject.deleteMany({
+    where: { facultyId, subjectId },
+  });
+};
+
 module.exports = {
   getSubjects,
   getFaculties,
   getSubjectsByFaculty,
   createSubject,
+  updateSubject,
+  deleteSubject,
+  createFaculty,
+  updateFaculty,
+  deleteFaculty,
+  assignSubjectToFaculty,
+  removeSubjectFromFaculty,
   getAnalytics,
   getStudents,
   getSubsidies,

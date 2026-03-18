@@ -12,8 +12,30 @@ const getSubjects = async (req, res) => {
 
 const createSubject = async (req, res) => {
   try {
-    const result = await service.createSubject(req.body);
+    const result = await service.createSubject(req.body, req.user);
     return response.created(res, result, "Materia creada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const updateSubject = async (req, res) => {
+  try {
+    const result = await service.updateSubject(
+      req.params.id,
+      req.body,
+      req.user,
+    );
+    return response.ok(res, result, "Materia actualizada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const deleteSubject = async (req, res) => {
+  try {
+    await service.deleteSubject(req.params.id, req.user);
+    return response.ok(res, null, "Materia eliminada");
   } catch (err) {
     return response.error(res, err.message);
   }
@@ -57,8 +79,65 @@ const getFaculties = async (req, res) => {
 
 const getSubjectsByFaculty = async (req, res) => {
   try {
-    const result = await service.getSubjectsByFaculty(req.params.id);
+    const result = await service.getSubjectsByFaculty(req.params.id, req.query);
     return response.ok(res, result);
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const createFaculty = async (req, res) => {
+  try {
+    const result = await service.createFaculty(req.body, req.user);
+    return response.created(res, result, "Facultad creada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const updateFaculty = async (req, res) => {
+  try {
+    const result = await service.updateFaculty(
+      req.params.id,
+      req.body,
+      req.user,
+    );
+    return response.ok(res, result, "Facultad actualizada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const deleteFaculty = async (req, res) => {
+  try {
+    await service.deleteFaculty(req.params.id, req.user);
+    return response.ok(res, null, "Facultad eliminada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const assignSubjectToFaculty = async (req, res) => {
+  try {
+    const result = await service.assignSubjectToFaculty(
+      req.params.id,
+      req.body.subjectId,
+      req.user,
+    );
+    return response.ok(res, result, "Materia asignada");
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+const removeSubjectFromFaculty = async (req, res) => {
+  try {
+    await service.removeSubjectFromFaculty(
+      req.params.id,
+      req.params.subjectId,
+      req.user,
+    );
+    return response.ok(res, null, "Materia removida");
   } catch (err) {
     return response.error(res, err.message);
   }
@@ -117,12 +196,19 @@ const captureUniversityOrder = async (req, res) => {
 
 module.exports = {
   getSubjects,
-  getFaculties,
-  getSubjectsByFaculty,
   createSubject,
+  updateSubject,
+  deleteSubject,
   getAnalytics,
   getStudents,
   getSubsidies,
+  getFaculties,
+  getSubjectsByFaculty,
+  createFaculty,
+  updateFaculty,
+  deleteFaculty,
+  assignSubjectToFaculty,
+  removeSubjectFromFaculty,
   getPlatformEarnings,
   rechargeUniversity,
   getList,

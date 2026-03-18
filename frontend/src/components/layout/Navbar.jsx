@@ -20,6 +20,8 @@ const NAV_LINKS = {
     { label: "Dashboard", to: "/university/dashboard" },
     { label: "Estudiantes", to: "/university/students" },
     { label: "Subsidios", to: "/university/subsidies" },
+    { label: "Facultades", to: "/university/faculties" },
+    { label: "Materias", to: "/university/subjects" },
   ],
   admin: [
     { label: "Dashboard", to: "/admin/dashboard" },
