@@ -139,7 +139,7 @@ export default function TutorMySessions() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Mis sesiones</h1>
         <p className="text-gray-500 mb-8">Gestiona tus sesiones de tutoría</p>
 
@@ -154,7 +154,7 @@ export default function TutorMySessions() {
             <button
               key={f.key}
               onClick={() => handleFilterChange(f.key)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all
                 ${filter === f.key ? "bg-orange-600 text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"}`}
             >
               {f.label}
@@ -206,36 +206,42 @@ export default function TutorMySessions() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="bg-white rounded-xl border border-gray-100 shadow-sm p-6"
+                    className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-6"
                   >
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <div className="flex items-center gap-3 mb-1">
-                          <h3 className="font-semibold text-gray-900">
-                            {session.subject.name}
-                          </h3>
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full font-medium ${status.color}`}
-                          >
-                            {status.label}
-                          </span>
-                        </div>
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-base leading-tight mb-1">
+                          {session.subject.name}
+                        </h3>
                         <p className="text-sm text-gray-500">
                           Estudiante: {session.student.name}
                         </p>
                       </div>
-                      <span className="text-orange-600 font-semibold">
-                        ${session.price}
-                      </span>
+                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${status.color}`}
+                        >
+                          {status.label}
+                        </span>
+                        <span className="text-orange-600 font-semibold text-sm">
+                          ${session.price}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-sm text-gray-500 mb-4">
                       <div className="flex items-center gap-1">
-                        <Calendar size={14} className="text-gray-400" />
-                        {date}
+                        <Calendar
+                          size={14}
+                          className="text-gray-400 flex-shrink-0"
+                        />
+                        <span className="truncate">{date}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Clock size={14} className="text-gray-400" />
+                        <Clock
+                          size={14}
+                          className="text-gray-400 flex-shrink-0"
+                        />
                         {session.startTime} - {session.endTime}
                       </div>
                     </div>
@@ -249,7 +255,7 @@ export default function TutorMySessions() {
                       </div>
                     )}
 
-                    <div className="flex gap-3 pt-4 border-t border-gray-100">
+                    <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100">
                       {session.status === "pending" && (
                         <>
                           <button
@@ -291,7 +297,7 @@ export default function TutorMySessions() {
                               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
                             >
                               <Video size={14} />
-                              Unirse a la sesión
+                              Unirse
                             </a>
                           )}
                           <button
@@ -311,7 +317,7 @@ export default function TutorMySessions() {
                             className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
                           >
                             <CheckCircle size={14} />
-                            Marcar completada
+                            Completar
                           </button>
                           <button
                             onClick={() =>
@@ -340,7 +346,7 @@ export default function TutorMySessions() {
               })}
             </div>
 
-            <div className="flex items-center justify-between mt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-3">
               <p className="text-sm text-gray-500">
                 Mostrando {from}-{to} de {total} sesiones
               </p>

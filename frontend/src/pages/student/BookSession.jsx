@@ -104,8 +104,11 @@ export default function BookSession() {
 
   const price = tutor?.tutorProfile?.hourlyRate || 0;
   const hasBalance = wallet?.balance >= price;
-  const availableDays =
-    tutor?.tutorProfile?.availability?.map((a) => a.dayOfWeek) || [];
+  const availableDays = [
+    ...new Set(
+      tutor?.tutorProfile?.availability?.map((a) => a.dayOfWeek) || [],
+    ),
+  ];
 
   const isDateAvailable = (dateStr) => {
     if (!dateStr) return false;

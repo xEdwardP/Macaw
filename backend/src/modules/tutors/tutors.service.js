@@ -27,7 +27,14 @@ const tutorSelect = {
   },
 };
 
-const getAll = async ({ search, minRating, maxRate, area, facultyId }) => {
+const getAll = async ({
+  search,
+  minRating,
+  maxRate,
+  facultyId,
+  page = 1,
+  limit = 9,
+}) => {
   const where = {
     role: "tutor",
     isActive: true,
@@ -71,7 +78,18 @@ const getAll = async ({ search, minRating, maxRate, area, facultyId }) => {
   result.sort(
     (a, b) => b.tutorProfile.averageRating - a.tutorProfile.averageRating,
   );
-  return result;
+
+  const total = result.length;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const data = result.slice(offset, offset + parseInt(limit));
+
+  return {
+    data,
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / parseInt(limit)),
+  };
 };
 
 const getOne = async (id) => {

@@ -9,6 +9,7 @@ import {
   BookOpen,
   Clock,
   ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { tutorsService } from "../../services/tutors.service";
 import { universitiesService } from "../../services/universities.service";
@@ -19,26 +20,40 @@ export default function TutorSearch() {
   const [maxRate, setMaxRate] = useState("");
   const [facultyId, setFacultyId] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [page, setPage] = useState(1);
+  const limit = 9;
 
-  const { data: faculties } = useQuery({
-    queryKey: ["faculties"],
-    queryFn: () => universitiesService.getFaculties().then((r) => r.data.data),
+  const { data: faculties = [] } = useQuery({
+    queryKey: ["faculties-all"],
+    queryFn: () =>
+      universitiesService
+        .getFaculties({ limit: 100 })
+        .then((r) => r.data.data.data),
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["tutors", search, minRating, maxRate, facultyId],
+    queryKey: ["tutors", search, minRating, maxRate, facultyId, page],
     queryFn: () =>
       tutorsService
-        .getAll({ search, minRating, maxRate, facultyId })
+        .getAll({ search, minRating, maxRate, facultyId, page, limit })
         .then((r) => r.data.data),
   });
 
-  const tutors = data || [];
+  const tutors = data?.data || [];
+  const total = data?.total || 0;
+  const totalPages = data?.totalPages || 1;
+  const from = total === 0 ? 0 : (page - 1) * limit + 1;
+  const to = Math.min(page * limit, total);
+
+  const handleFilterChange = (fn) => {
+    fn();
+    setPage(1);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Encontrar tutor
           </h1>
@@ -56,22 +71,19 @@ export default function TutorSearch() {
                 type="text"
                 placeholder="Buscar por nombre o carrera..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl
-                focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                onChange={(e) =>
+                  handleFilterChange(() => setSearch(e.target.value))
+                }
+                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all
-              ${
-                showFilters
-                  ? "bg-orange-600 text-white border-orange-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
-              }`}
+              ${showFilters ? "bg-orange-600 text-white border-orange-600" : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"}`}
             >
               <SlidersHorizontal size={18} />
-              Filtros
+              <span className="hidden sm:block">Filtros</span>
             </button>
           </div>
 
@@ -87,9 +99,10 @@ export default function TutorSearch() {
                 </label>
                 <select
                   value={facultyId}
-                  onChange={(e) => setFacultyId(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none
-                  focus:ring-2 focus:ring-orange-500 text-sm"
+                  onChange={(e) =>
+                    handleFilterChange(() => setFacultyId(e.target.value))
+                  }
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                 >
                   <option value="">Todas las facultades</option>
                   {(faculties || []).map((f) => (
@@ -106,9 +119,10 @@ export default function TutorSearch() {
                 </label>
                 <select
                   value={minRating}
-                  onChange={(e) => setMinRating(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none
-                  focus:ring-2 focus:ring-orange-500 text-sm"
+                  onChange={(e) =>
+                    handleFilterChange(() => setMinRating(e.target.value))
+                  }
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                 >
                   <option value="">Cualquiera</option>
                   <option value="4">4+ estrellas</option>
@@ -123,9 +137,10 @@ export default function TutorSearch() {
                 </label>
                 <select
                   value={maxRate}
-                  onChange={(e) => setMaxRate(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none
-                  focus:ring-2 focus:ring-orange-500 text-sm"
+                  onChange={(e) =>
+                    handleFilterChange(() => setMaxRate(e.target.value))
+                  }
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                 >
                   <option value="">Cualquiera</option>
                   <option value="5">Hasta $5</option>
@@ -137,12 +152,14 @@ export default function TutorSearch() {
 
               <div className="flex items-end">
                 <button
-                  onClick={() => {
-                    setSearch("");
-                    setMinRating("");
-                    setMaxRate("");
-                    setFacultyId("");
-                  }}
+                  onClick={() =>
+                    handleFilterChange(() => {
+                      setSearch("");
+                      setMinRating("");
+                      setMaxRate("");
+                      setFacultyId("");
+                    })
+                  }
                   className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 underline"
                 >
                   Limpiar filtros
@@ -153,7 +170,7 @@ export default function TutorSearch() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
@@ -183,8 +200,8 @@ export default function TutorSearch() {
         ) : (
           <>
             <p className="text-sm text-gray-500 mb-6">
-              {tutors.length} tutor{tutors.length !== 1 ? "es" : ""} encontrado
-              {tutors.length !== 1 ? "s" : ""}
+              {total} tutor{total !== 1 ? "es" : ""} encontrado
+              {total !== 1 ? "s" : ""}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {tutors.map((tutor, i) => (
@@ -196,21 +213,19 @@ export default function TutorSearch() {
                 >
                   <Link
                     to={`/tutors/${tutor.id}`}
-                    className="block bg-white rounded-xl border border-gray-100
-                    shadow-sm hover:shadow-md hover:border-orange-200 transition-all p-6"
+                    className="block bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-200 transition-all p-6"
                   >
                     <div className="flex items-center gap-4 mb-4">
-                      <div
-                        className="w-14 h-14 rounded-full bg-orange-100 flex items-center
-                      justify-center text-orange-600 font-bold text-xl flex-shrink-0"
-                      >
+                      <div className="w-14 h-14 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xl flex-shrink-0">
                         {tutor.name.charAt(0)}
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-900 truncate">
                           {tutor.name}
                         </h3>
-                        <p className="text-sm text-gray-500">{tutor.career}</p>
+                        <p className="text-sm text-gray-500 truncate">
+                          {tutor.career}
+                        </p>
                       </div>
                     </div>
 
@@ -237,8 +252,7 @@ export default function TutorSearch() {
                       {tutor.tutorProfile?.subjects?.slice(0, 3).map((s) => (
                         <span
                           key={s.subject.id}
-                          className="text-xs bg-orange-50 text-orange-700
-                          px-2 py-1 rounded-full border border-orange-100"
+                          className="text-xs bg-orange-50 text-orange-700 px-2 py-1 rounded-full border border-orange-100"
                         >
                           {s.subject.name}
                         </span>
@@ -265,6 +279,33 @@ export default function TutorSearch() {
                   </Link>
                 </motion.div>
               ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-8 gap-3">
+              <p className="text-sm text-gray-500">
+                Mostrando {from}-{to} de {total} tutores
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                  disabled={page === 1}
+                  className="flex items-center gap-1 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft size={14} />
+                  Anterior
+                </button>
+                <span className="text-sm text-gray-500">
+                  {page} de {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={page === totalPages}
+                  className="flex items-center gap-1 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Siguiente
+                  <ChevronRight size={14} />
+                </button>
+              </div>
             </div>
           </>
         )}
