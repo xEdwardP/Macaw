@@ -418,11 +418,6 @@ export default function UniversitySubjects() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {subject.isGeneral && (
-                      <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
-                        General
-                      </span>
-                    )}
                     <button
                       onClick={() => setModal({ type: "edit", subject })}
                       className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"

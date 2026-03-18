@@ -467,11 +467,6 @@ export default function TutorMyProfile() {
                         <p className="text-xs text-gray-400 mt-0.5">
                           {subject.quarter ? `Trim. ${subject.quarter}` : ""}
                           {subject.credits ? ` · ${subject.credits} cr.` : ""}
-                          {subject.isGeneral && (
-                            <span className="ml-1 text-orange-400">
-                              · General
-                            </span>
-                          )}
                         </p>
                       </div>
                     </button>
