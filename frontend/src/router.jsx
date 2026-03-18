@@ -23,6 +23,7 @@ import AdminWithdrawals from "./pages/admin/Withdrawals";
 import AdminUniversities from "./pages/admin/Universities";
 import UniversityFaculties from "./pages/university/Faculties";
 import UniversitySubjects from "./pages/university/Subjects";
+import NotFound from './pages/public/NotFound';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, token } = useAuthStore();
@@ -238,7 +239,7 @@ export default function AppRouter() {
         }
       />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

@@ -54,7 +54,7 @@ export default function TutorMyProfile() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("profile");
 
-  const [filterFaculty, setFilterFaculty] = useState(""); // facultyId | "general" | ""
+  const [filterFaculty, setFilterFaculty] = useState("");
   const [filterQuarter, setFilterQuarter] = useState("");
   const [filterSearch, setFilterSearch] = useState("");
   const [subjectPage, setSubjectPage] = useState(1);
@@ -66,13 +66,19 @@ export default function TutorMyProfile() {
   });
 
   const { data: allSubjects = [] } = useQuery({
-    queryKey: ["subjects"],
-    queryFn: () => api.get("/universities/subjects").then((r) => r.data.data),
+    queryKey: ["subjects-all"],
+    queryFn: () =>
+      api
+        .get("/universities/subjects", { params: { limit: 1000 } })
+        .then((r) => r.data.data.data),
   });
 
   const { data: faculties = [] } = useQuery({
-    queryKey: ["faculties"],
-    queryFn: () => api.get("/universities/faculties").then((r) => r.data.data),
+    queryKey: ["faculties-all"],
+    queryFn: () =>
+      api
+        .get("/universities/faculties", { params: { limit: 100 } })
+        .then((r) => r.data.data.data),
   });
 
   const { register: regProfile, handleSubmit: submitProfile } = useForm({
@@ -141,6 +147,7 @@ export default function TutorMyProfile() {
     }
     setAvailability([...availability, { ...newSlot }]);
   };
+
   const removeSlot = (dayOfWeek) =>
     setAvailability(availability.filter((s) => s.dayOfWeek !== dayOfWeek));
 
@@ -148,7 +155,7 @@ export default function TutorMyProfile() {
     tutor?.tutorProfile?.subjects?.map((s) => s.subject.id) || [];
 
   const filteredSubjects = useMemo(() => {
-    return allSubjects.filter((s) => {
+    return (allSubjects || []).filter((s) => {
       if (existingSubjectIds.includes(s.id)) return false;
 
       if (filterFaculty === "general") {
@@ -191,7 +198,7 @@ export default function TutorMyProfile() {
 
   const quarterOptions = useMemo(
     () =>
-      [...new Set(allSubjects.map((s) => s.quarter))]
+      [...new Set((allSubjects || []).map((s) => s.quarter))]
         .filter(Boolean)
         .sort((a, b) => a - b),
     [allSubjects],
@@ -458,7 +465,8 @@ export default function TutorMyProfile() {
                           {subject.name}
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          Trim. {subject.quarter} · {subject.credits} cr.
+                          {subject.quarter ? `Trim. ${subject.quarter}` : ""}
+                          {subject.credits ? ` · ${subject.credits} cr.` : ""}
                           {subject.isGeneral && (
                             <span className="ml-1 text-orange-400">
                               · General
