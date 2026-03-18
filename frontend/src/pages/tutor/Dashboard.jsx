@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -10,6 +11,7 @@ import {
   ChevronRight,
   Video,
   Users,
+  AlertTriangle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
@@ -23,13 +25,69 @@ const STATUS_LABELS = {
     label: "Esperando confirmación",
     color: "bg-purple-100 text-purple-700",
   },
+  disputed: { label: "En disputa", color: "bg-red-100 text-red-700" },
   completed: { label: "Completada", color: "bg-green-100 text-green-700" },
   cancelled: { label: "Cancelada", color: "bg-red-100 text-red-700" },
 };
 
+function ConfirmModal({
+  title,
+  message,
+  confirmLabel,
+  variant,
+  onClose,
+  onConfirm,
+}) {
+  const colors = {
+    danger: "bg-red-600 hover:bg-red-700",
+    warning: "bg-orange-600 hover:bg-orange-700",
+    success: "bg-green-600 hover:bg-green-700",
+  };
+  const iconColors = {
+    danger: "bg-red-100 text-red-600",
+    warning: "bg-orange-100 text-orange-600",
+    success: "bg-green-100 text-green-600",
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-xl p-6 w-full max-w-md"
+      >
+        <div className="flex items-center gap-3 mb-2">
+          <div
+            className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconColors[variant]}`}
+          >
+            <AlertTriangle size={20} />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+        </div>
+        <p className="text-sm text-gray-500 mb-6">{message}</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`flex-1 py-2 text-white rounded-lg transition-colors text-sm ${colors[variant]}`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function TutorDashboard() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const [modal, setModal] = useState(null);
 
   const { data: sessions } = useQuery({
     queryKey: ["sessions-dashboard-tutor"],
@@ -185,10 +243,7 @@ export default function TutorDashboard() {
                       className="border border-gray-100 rounded-lg p-4"
                     >
                       <div className="flex items-center gap-3 mb-3">
-                        <div
-                          className="w-8 h-8 rounded-full bg-blue-100 flex items-center
-                        justify-center text-blue-600 font-bold text-sm"
-                        >
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
                           {session.student.name.charAt(0)}
                         </div>
                         <div>
@@ -203,15 +258,24 @@ export default function TutorDashboard() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => confirmSession(session.id)}
-                          className="flex-1 py-1.5 bg-green-600 hover:bg-green-700
-                          text-white text-xs rounded-lg transition-colors"
+                          className="flex-1 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors"
                         >
                           Confirmar
                         </button>
                         <button
-                          onClick={() => cancelSession(session.id)}
-                          className="flex-1 py-1.5 border border-red-200 text-red-600
-                          hover:bg-red-50 text-xs rounded-lg transition-colors"
+                          onClick={() =>
+                            setModal({
+                              title: "Rechazar solicitud",
+                              message: `¿Deseas rechazar la solicitud de ${session.student.name}? Esta accion no se puede deshacer.`,
+                              confirmLabel: "Si, rechazar",
+                              variant: "danger",
+                              onConfirm: () => {
+                                cancelSession(session.id);
+                                setModal(null);
+                              },
+                            })
+                          }
+                          className="flex-1 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 text-xs rounded-lg transition-colors"
                         >
                           Rechazar
                         </button>
@@ -255,10 +319,7 @@ export default function TutorDashboard() {
                       className="border border-gray-100 rounded-lg p-4"
                     >
                       <div className="flex items-center gap-3 mb-3">
-                        <div
-                          className="w-8 h-8 rounded-full bg-orange-100 flex items-center
-                        justify-center text-orange-600 font-bold text-sm"
-                        >
+                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm">
                           {session.student.name.charAt(0)}
                         </div>
                         <div className="flex-1">
@@ -286,9 +347,20 @@ export default function TutorDashboard() {
                           </a>
                         )}
                         <button
-                          onClick={() => completeSession(session.id)}
-                          className="flex-1 py-1.5 bg-green-600 hover:bg-green-700
-                          text-white text-xs rounded-lg transition-colors"
+                          onClick={() =>
+                            setModal({
+                              title: "Marcar como completada",
+                              message:
+                                "El estudiante tendra 24hrs para confirmar la sesion. Si no confirma, el pago se liberara automaticamente.",
+                              confirmLabel: "Si, completar",
+                              variant: "success",
+                              onConfirm: () => {
+                                completeSession(session.id);
+                                setModal(null);
+                              },
+                            })
+                          }
+                          className="flex-1 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors"
                         >
                           Completar
                         </button>
@@ -377,6 +449,17 @@ export default function TutorDashboard() {
           </div>
         </div>
       </div>
+
+      {modal && (
+        <ConfirmModal
+          title={modal.title}
+          message={modal.message}
+          confirmLabel={modal.confirmLabel}
+          variant={modal.variant}
+          onClose={() => setModal(null)}
+          onConfirm={modal.onConfirm}
+        />
+      )}
     </div>
   );
 }

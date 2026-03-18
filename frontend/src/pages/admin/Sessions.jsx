@@ -24,9 +24,66 @@ const STATUS_LABELS = {
   cancelled: { label: "Cancelada", color: "bg-gray-100 text-gray-700" },
 };
 
+function ConfirmModal({
+  title,
+  message,
+  confirmLabel,
+  variant,
+  onClose,
+  onConfirm,
+}) {
+  const colors = {
+    danger: "bg-red-600 hover:bg-red-700",
+    warning: "bg-orange-600 hover:bg-orange-700",
+    success: "bg-green-600 hover:bg-green-700",
+    info: "bg-blue-600 hover:bg-blue-700",
+  };
+  const iconColors = {
+    danger: "bg-red-100 text-red-600",
+    warning: "bg-orange-100 text-orange-600",
+    success: "bg-green-100 text-green-600",
+    info: "bg-blue-100 text-blue-600",
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-xl p-6 w-full max-w-md"
+      >
+        <div className="flex items-center gap-3 mb-2">
+          <div
+            className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconColors[variant]}`}
+          >
+            <AlertTriangle size={20} />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+        </div>
+        <p className="text-sm text-gray-500 mb-6">{message}</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`flex-1 py-2 text-white rounded-lg transition-colors text-sm ${colors[variant]}`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function AdminSessions() {
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [modal, setModal] = useState(null);
   const queryClient = useQueryClient();
   const limit = 10;
 
@@ -146,11 +203,7 @@ export default function AdminSessions() {
               key={f.key}
               onClick={() => handleFilterChange(f.key)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
-                ${
-                  filter === f.key
-                    ? "bg-orange-600 text-white"
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"
-                }`}
+                ${filter === f.key ? "bg-orange-600 text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"}`}
             >
               {f.label}
               {f.key === "disputed" && disputedCount > 0 && (
@@ -204,11 +257,7 @@ export default function AdminSessions() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03 }}
                     className={`bg-white rounded-xl border shadow-sm p-5
-                      ${
-                        session.status === "disputed"
-                          ? "border-red-200 bg-red-50/30"
-                          : "border-gray-100"
-                      }`}
+                      ${session.status === "disputed" ? "border-red-200 bg-red-50/30" : "border-gray-100"}`}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -250,12 +299,20 @@ export default function AdminSessions() {
                     {["pending", "confirmed"].includes(session.status) && (
                       <div className="mt-3 pt-3 border-t border-gray-100">
                         <button
-                          onClick={() => {
-                            if (confirm("¿Cancelar esta sesión?"))
-                              cancelSession(session.id);
-                          }}
-                          className="flex items-center gap-2 px-3 py-1.5 border border-red-200
-                          text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
+                          onClick={() =>
+                            setModal({
+                              title: "Cancelar sesion",
+                              message:
+                                "Esta accion no se puede deshacer. El estudiante recibira un reembolso segun la politica de cancelacion.",
+                              confirmLabel: "Si, cancelar",
+                              variant: "danger",
+                              onConfirm: () => {
+                                cancelSession(session.id);
+                                setModal(null);
+                              },
+                            })
+                          }
+                          className="flex items-center gap-2 px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
                         >
                           <X size={14} />
                           Cancelar sesión
@@ -270,36 +327,44 @@ export default function AdminSessions() {
                         </p>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => {
-                              if (
-                                confirm(
-                                  "¿Dar razón al estudiante? Se hará un reembolso completo.",
-                                )
-                              )
-                                resolveDispute({
-                                  id: session.id,
-                                  favorOf: "student",
-                                });
-                            }}
-                            className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700
-                            text-white text-xs rounded-lg transition-colors"
+                            onClick={() =>
+                              setModal({
+                                title: "Resolver a favor del estudiante",
+                                message:
+                                  "Se realizara un reembolso completo al estudiante. Esta accion no se puede deshacer.",
+                                confirmLabel: "Si, favor estudiante",
+                                variant: "info",
+                                onConfirm: () => {
+                                  resolveDispute({
+                                    id: session.id,
+                                    favorOf: "student",
+                                  });
+                                  setModal(null);
+                                },
+                              })
+                            }
+                            className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors"
                           >
                             Favor estudiante
                           </button>
                           <button
-                            onClick={() => {
-                              if (
-                                confirm(
-                                  "¿Dar razón al tutor? Se liberará el pago al tutor.",
-                                )
-                              )
-                                resolveDispute({
-                                  id: session.id,
-                                  favorOf: "tutor",
-                                });
-                            }}
-                            className="flex-1 py-1.5 bg-green-600 hover:bg-green-700
-                            text-white text-xs rounded-lg transition-colors"
+                            onClick={() =>
+                              setModal({
+                                title: "Resolver a favor del tutor",
+                                message:
+                                  "Se liberara el pago al tutor. Esta accion no se puede deshacer.",
+                                confirmLabel: "Si, favor tutor",
+                                variant: "success",
+                                onConfirm: () => {
+                                  resolveDispute({
+                                    id: session.id,
+                                    favorOf: "tutor",
+                                  });
+                                  setModal(null);
+                                },
+                              })
+                            }
+                            className="flex-1 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors"
                           >
                             Favor tutor
                           </button>
@@ -340,6 +405,17 @@ export default function AdminSessions() {
           </>
         )}
       </div>
+
+      {modal && (
+        <ConfirmModal
+          title={modal.title}
+          message={modal.message}
+          confirmLabel={modal.confirmLabel}
+          variant={modal.variant}
+          onClose={() => setModal(null)}
+          onConfirm={modal.onConfirm}
+        />
+      )}
     </div>
   );
 }

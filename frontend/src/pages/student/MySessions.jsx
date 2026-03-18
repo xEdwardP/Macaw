@@ -64,8 +64,7 @@ function ReviewModal({ session, onClose, onSubmit, isPending }) {
           onChange={(e) => setComment(e.target.value)}
           placeholder="Comparte tu experiencia con este tutor..."
           rows={3}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg
-          focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm mb-4"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm mb-4"
         />
 
         <div className="flex gap-3">
@@ -122,8 +121,7 @@ function DisputeModal({ session, onClose, onSubmit, isPending }) {
             onChange={(e) => setReason(e.target.value)}
             placeholder="Ej: El tutor no se conectó a la videollamada, la sesión no se realizó..."
             rows={4}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg
-            focus:outline-none focus:ring-2 focus:ring-red-500 resize-none text-sm"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 resize-none text-sm"
           />
         </div>
 
@@ -137,10 +135,46 @@ function DisputeModal({ session, onClose, onSubmit, isPending }) {
           <button
             onClick={() => onSubmit(session.id, reason)}
             disabled={isPending || !reason.trim()}
-            className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg
-            transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
           >
             {isPending ? "Enviando..." : "Enviar reporte"}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function CancelModal({ onClose, onConfirm }) {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-xl p-6 w-full max-w-md"
+      >
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+            <AlertTriangle size={20} className="text-red-600" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">Cancelar sesion</h3>
+        </div>
+        <p className="text-sm text-gray-500 mb-6">
+          Esta accion no se puede deshacer. Si cancelas con menos de 24hrs de
+          anticipacion solo recibiras un reembolso del 50%.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+          >
+            No, volver
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm"
+          >
+            Si, cancelar
           </button>
         </div>
       </motion.div>
@@ -153,6 +187,7 @@ export default function MySessions() {
   const [page, setPage] = useState(1);
   const [reviewSession, setReviewSession] = useState(null);
   const [disputeSession, setDisputeSession] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null);
   const queryClient = useQueryClient();
   const limit = 10;
 
@@ -239,11 +274,7 @@ export default function MySessions() {
               key={f.key}
               onClick={() => handleFilterChange(f.key)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
-                ${
-                  filter === f.key
-                    ? "bg-orange-600 text-white"
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"
-                }`}
+                ${filter === f.key ? "bg-orange-600 text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"}`}
             >
               {f.label}
             </button>
@@ -346,24 +377,19 @@ export default function MySessions() {
                           <button
                             onClick={() => studentConfirm(session.id)}
                             disabled={isConfirming}
-                            className="flex items-center gap-2 px-4 py-2 bg-purple-600
-                            hover:bg-purple-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+                            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
                           >
                             <CheckCircle size={14} />
                             Confirmar sesión recibida
                           </button>
                           <button
                             onClick={() => setDisputeSession(session)}
-                            className="flex items-center gap-2 px-4 py-2 border border-red-200
-                            text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
                           >
                             <AlertTriangle size={14} />
                             Reportar problema
                           </button>
-                          <div
-                            className="w-full flex items-center gap-2 text-xs text-amber-600 bg-amber-50
-                          border border-amber-200 px-3 py-2 rounded-lg"
-                          >
+                          <div className="w-full flex items-center gap-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg">
                             Si no confirmas en 24hrs el pago se liberará
                             automáticamente
                           </div>
@@ -371,10 +397,7 @@ export default function MySessions() {
                       )}
 
                       {session.status === "disputed" && (
-                        <div
-                          className="flex items-center gap-2 text-red-600 text-sm bg-red-50
-                        border border-red-200 px-3 py-2 rounded-lg"
-                        >
+                        <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
                           <AlertTriangle size={14} />
                           Disputa en revisión por el administrador
                         </div>
@@ -382,12 +405,8 @@ export default function MySessions() {
 
                       {["pending", "confirmed"].includes(session.status) && (
                         <button
-                          onClick={() => {
-                            if (confirm("¿Cancelar esta sesión?"))
-                              cancelSession(session.id);
-                          }}
-                          className="flex items-center gap-2 px-4 py-2 border border-red-200
-                          text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
+                          onClick={() => setConfirmModal(session.id)}
+                          className="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
                         >
                           <X size={14} />
                           Cancelar
@@ -397,8 +416,7 @@ export default function MySessions() {
                       {session.status === "completed" && !session.review && (
                         <button
                           onClick={() => setReviewSession(session)}
-                          className="flex items-center gap-2 px-4 py-2 border border-orange-200
-                          text-orange-600 hover:bg-orange-50 text-sm rounded-lg transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 border border-orange-200 text-orange-600 hover:bg-orange-50 text-sm rounded-lg transition-colors"
                         >
                           <Star size={14} />
                           Dejar reseña
@@ -462,6 +480,16 @@ export default function MySessions() {
           onClose={() => setDisputeSession(null)}
           onSubmit={(id, reason) => submitDispute({ id, reason })}
           isPending={isDisputing}
+        />
+      )}
+
+      {confirmModal && (
+        <CancelModal
+          onClose={() => setConfirmModal(null)}
+          onConfirm={() => {
+            cancelSession(confirmModal);
+            setConfirmModal(null);
+          }}
         />
       )}
     </div>

@@ -9,6 +9,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { sessionsService } from "../../services/sessions.service";
@@ -20,13 +21,69 @@ const STATUS_LABELS = {
     label: "Esperando confirmación",
     color: "bg-purple-100 text-purple-700",
   },
+  disputed: { label: "En disputa", color: "bg-red-100 text-red-700" },
   completed: { label: "Completada", color: "bg-green-100 text-green-700" },
   cancelled: { label: "Cancelada", color: "bg-red-100 text-red-700" },
 };
 
+function ConfirmModal({
+  title,
+  message,
+  confirmLabel,
+  variant,
+  onClose,
+  onConfirm,
+}) {
+  const colors = {
+    danger: "bg-red-600 hover:bg-red-700",
+    warning: "bg-orange-600 hover:bg-orange-700",
+    success: "bg-green-600 hover:bg-green-700",
+  };
+  const iconColors = {
+    danger: "bg-red-100 text-red-600",
+    warning: "bg-orange-100 text-orange-600",
+    success: "bg-green-100 text-green-600",
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-xl p-6 w-full max-w-md"
+      >
+        <div className="flex items-center gap-3 mb-2">
+          <div
+            className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconColors[variant]}`}
+          >
+            <AlertTriangle size={20} />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+        </div>
+        <p className="text-sm text-gray-500 mb-6">{message}</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`flex-1 py-2 text-white rounded-lg transition-colors text-sm ${colors[variant]}`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function TutorMySessions() {
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [modal, setModal] = useState(null);
   const queryClient = useQueryClient();
   const limit = 10;
 
@@ -98,11 +155,7 @@ export default function TutorMySessions() {
               key={f.key}
               onClick={() => handleFilterChange(f.key)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
-                ${
-                  filter === f.key
-                    ? "bg-orange-600 text-white"
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"
-                }`}
+                ${filter === f.key ? "bg-orange-600 text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"}`}
             >
               {f.label}
             </button>
@@ -201,19 +254,26 @@ export default function TutorMySessions() {
                         <>
                           <button
                             onClick={() => confirmSession(session.id)}
-                            className="flex items-center gap-2 px-4 py-2 bg-green-600
-                            hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
                           >
                             <CheckCircle size={14} />
                             Confirmar
                           </button>
                           <button
-                            onClick={() => {
-                              if (confirm("¿Rechazar esta sesión?"))
-                                cancelSession(session.id);
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 border border-red-200
-                            text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
+                            onClick={() =>
+                              setModal({
+                                title: "Rechazar sesion",
+                                message:
+                                  "¿Estas seguro que deseas rechazar esta solicitud de sesion?",
+                                confirmLabel: "Si, rechazar",
+                                variant: "danger",
+                                onConfirm: () => {
+                                  cancelSession(session.id);
+                                  setModal(null);
+                                },
+                              })
+                            }
+                            className="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
                           >
                             <X size={14} />
                             Rechazar
@@ -235,20 +295,39 @@ export default function TutorMySessions() {
                             </a>
                           )}
                           <button
-                            onClick={() => completeSession(session.id)}
-                            className="flex items-center gap-2 px-4 py-2 bg-green-600
-                            hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
+                            onClick={() =>
+                              setModal({
+                                title: "Marcar como completada",
+                                message:
+                                  "El estudiante tendra 24hrs para confirmar la sesion. Si no confirma, el pago se liberara automaticamente.",
+                                confirmLabel: "Si, completar",
+                                variant: "success",
+                                onConfirm: () => {
+                                  completeSession(session.id);
+                                  setModal(null);
+                                },
+                              })
+                            }
+                            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
                           >
                             <CheckCircle size={14} />
                             Marcar completada
                           </button>
                           <button
-                            onClick={() => {
-                              if (confirm("¿Cancelar esta sesión?"))
-                                cancelSession(session.id);
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 border border-red-200
-                            text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
+                            onClick={() =>
+                              setModal({
+                                title: "Cancelar sesion",
+                                message:
+                                  "Esta accion no se puede deshacer. El estudiante recibira un reembolso segun la politica de cancelacion.",
+                                confirmLabel: "Si, cancelar",
+                                variant: "danger",
+                                onConfirm: () => {
+                                  cancelSession(session.id);
+                                  setModal(null);
+                                },
+                              })
+                            }
+                            className="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm rounded-lg transition-colors"
                           >
                             <X size={14} />
                             Cancelar
@@ -290,6 +369,17 @@ export default function TutorMySessions() {
           </>
         )}
       </div>
+
+      {modal && (
+        <ConfirmModal
+          title={modal.title}
+          message={modal.message}
+          confirmLabel={modal.confirmLabel}
+          variant={modal.variant}
+          onClose={() => setModal(null)}
+          onConfirm={modal.onConfirm}
+        />
+      )}
     </div>
   );
 }
