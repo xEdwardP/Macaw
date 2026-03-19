@@ -12,6 +12,7 @@ import {
   Video,
   Users,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../store/authStore";
@@ -37,6 +38,7 @@ function ConfirmModal({
   variant,
   onClose,
   onConfirm,
+  isPending,
 }) {
   const colors = {
     danger: "bg-red-600 hover:bg-red-700",
@@ -68,15 +70,18 @@ function ConfirmModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+            disabled={isPending}
+            className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 py-2 text-white rounded-lg transition-colors text-sm ${colors[variant]}`}
+            disabled={isPending}
+            className={`flex-1 py-2 text-white rounded-lg transition-colors text-sm disabled:opacity-50 flex items-center justify-center gap-2 ${colors[variant]}`}
           >
-            {confirmLabel}
+            {isPending && <Loader2 size={14} className="animate-spin" />}
+            {isPending ? "Procesando..." : confirmLabel}
           </button>
         </div>
       </motion.div>
@@ -102,7 +107,7 @@ export default function TutorDashboard() {
     queryFn: () => walletService.getMyWallet().then((r) => r.data.data),
   });
 
-  const { mutate: confirmSession } = useMutation({
+  const { mutate: confirmSession, isPending: isConfirming } = useMutation({
     mutationFn: (id) => sessionsService.confirm(id),
     onSuccess: () => {
       toast.success("Sesión confirmada");
@@ -112,26 +117,34 @@ export default function TutorDashboard() {
       toast.error(err.response?.data?.message || "Error al confirmar"),
   });
 
-  const { mutate: completeSession } = useMutation({
+  const { mutate: completeSession, isPending: isCompleting } = useMutation({
     mutationFn: (id) => sessionsService.complete(id),
     onSuccess: () => {
       toast.success("Sesión completada");
+      setModal(null);
       queryClient.invalidateQueries(["sessions-dashboard-tutor"]);
       queryClient.invalidateQueries(["wallet"]);
     },
-    onError: (err) =>
-      toast.error(err.response?.data?.message || "Error al completar"),
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Error al completar");
+      setModal(null);
+    },
   });
 
-  const { mutate: cancelSession } = useMutation({
+  const { mutate: cancelSession, isPending: isCancelling } = useMutation({
     mutationFn: (id) => sessionsService.cancel(id),
     onSuccess: () => {
       toast.success("Sesión cancelada");
+      setModal(null);
       queryClient.invalidateQueries(["sessions-dashboard-tutor"]);
     },
-    onError: (err) =>
-      toast.error(err.response?.data?.message || "Error al cancelar"),
+    onError: (err) => {
+      toast.error(err.response?.data?.message || "Error al cancelar");
+      setModal(null);
+    },
   });
+
+  const isProcessing = isConfirming || isCompleting || isCancelling;
 
   const allSessions = sessions || [];
   const pendingSessions = allSessions.filter((s) => s.status === "pending");
@@ -258,9 +271,13 @@ export default function TutorDashboard() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => confirmSession(session.id)}
-                          className="flex-1 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors"
+                          disabled={isProcessing}
+                          className="flex-1 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
                         >
-                          Confirmar
+                          {isConfirming ? (
+                            <Loader2 size={12} className="animate-spin" />
+                          ) : null}
+                          {isConfirming ? "Confirmando..." : "Confirmar"}
                         </button>
                         <button
                           onClick={() =>
@@ -269,13 +286,11 @@ export default function TutorDashboard() {
                               message: `¿Deseas rechazar la solicitud de ${session.student.name}? Esta accion no se puede deshacer.`,
                               confirmLabel: "Si, rechazar",
                               variant: "danger",
-                              onConfirm: () => {
-                                cancelSession(session.id);
-                                setModal(null);
-                              },
+                              onConfirm: () => cancelSession(session.id),
                             })
                           }
-                          className="flex-1 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 text-xs rounded-lg transition-colors"
+                          disabled={isProcessing}
+                          className="flex-1 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Rechazar
                         </button>
@@ -354,13 +369,11 @@ export default function TutorDashboard() {
                                 "El estudiante tendra 24hrs para confirmar la sesion. Si no confirma, el pago se liberara automaticamente.",
                               confirmLabel: "Si, completar",
                               variant: "success",
-                              onConfirm: () => {
-                                completeSession(session.id);
-                                setModal(null);
-                              },
+                              onConfirm: () => completeSession(session.id),
                             })
                           }
-                          className="flex-1 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors"
+                          disabled={isProcessing}
+                          className="flex-1 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Completar
                         </button>
@@ -456,8 +469,9 @@ export default function TutorDashboard() {
           message={modal.message}
           confirmLabel={modal.confirmLabel}
           variant={modal.variant}
-          onClose={() => setModal(null)}
+          onClose={() => !isProcessing && setModal(null)}
           onConfirm={modal.onConfirm}
+          isPending={isProcessing}
         />
       )}
     </div>
