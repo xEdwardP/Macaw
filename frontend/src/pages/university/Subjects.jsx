@@ -50,7 +50,7 @@ function SubjectModal({ subject, faculties, onClose, onSubmit, isPending }) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-xl p-6 w-full max-w-md"
+        className="bg-white rounded-xl p-6 w-full max-w-md max-h-screen overflow-y-auto"
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-bold text-gray-900">
@@ -297,9 +297,9 @@ export default function UniversitySubjects() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        <div className="flex items-center justify-between mb-8 gap-3">
+          <div className="min-w-0">
             <h1 className="text-3xl font-bold text-gray-900">Materias</h1>
             <p className="text-gray-500 mt-1">
               Gestiona las materias de tu universidad
@@ -307,15 +307,16 @@ export default function UniversitySubjects() {
           </div>
           <button
             onClick={() => setModal({ type: "create" })}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm font-medium"
+            className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm font-medium flex-shrink-0"
           >
             <Plus size={16} />
-            Nueva materia
+            <span className="hidden sm:block">Nueva materia</span>
+            <span className="sm:hidden">Nueva</span>
           </button>
         </div>
 
         <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-          <div className="relative flex-1 max-w-sm">
+          <div className="relative flex-1">
             <Search
               size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -329,7 +330,7 @@ export default function UniversitySubjects() {
           </div>
           <button
             type="submit"
-            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm transition-colors"
+            className="px-3 sm:px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm transition-colors"
           >
             Buscar
           </button>
@@ -337,7 +338,7 @@ export default function UniversitySubjects() {
             <button
               type="button"
               onClick={handleClearSearch}
-              className="px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors"
+              className="px-3 sm:px-4 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg text-sm transition-colors"
             >
               Limpiar
             </button>
@@ -347,7 +348,7 @@ export default function UniversitySubjects() {
         <div className="flex gap-2 mb-6 flex-wrap">
           <button
             onClick={() => handleFilterChange("all")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
+            className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all
               ${facultyFilter === "all" ? "bg-orange-600 text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"}`}
           >
             Todas
@@ -356,7 +357,7 @@ export default function UniversitySubjects() {
             <button
               key={f.id}
               onClick={() => handleFilterChange(f.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all
                 ${facultyFilter === f.id ? "bg-orange-600 text-white" : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"}`}
             >
               {f.code}
@@ -402,22 +403,22 @@ export default function UniversitySubjects() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.03 }}
-                  className="flex items-center gap-4 p-4"
+                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <BookOpen size={18} className="text-blue-600" />
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <BookOpen size={16} className="text-blue-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 text-sm">
+                    <p className="font-medium text-gray-900 text-sm truncate">
                       {subject.name}
                     </p>
                     <p className="text-xs text-gray-400">
                       {subject.code}
-                      {subject.quarter ? ` · Trimestre ${subject.quarter}` : ""}
-                      {subject.credits ? ` · ${subject.credits} créditos` : ""}
+                      {subject.quarter ? ` · Trim. ${subject.quarter}` : ""}
+                      {subject.credits ? ` · ${subject.credits} cr.` : ""}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <button
                       onClick={() => setModal({ type: "edit", subject })}
                       className="p-1.5 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
@@ -435,7 +436,7 @@ export default function UniversitySubjects() {
               ))}
             </div>
 
-            <div className="flex items-center justify-between mt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-3">
               <p className="text-sm text-gray-500">
                 Mostrando {from}-{to} de {total} materias
               </p>

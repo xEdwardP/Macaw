@@ -142,7 +142,7 @@ export default function TutorDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -154,7 +154,7 @@ export default function TutorDashboard() {
           <p className="text-gray-500 mt-1">Panel de tutor</p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
           {[
             {
               label: "Saldo disponible",
@@ -190,14 +190,14 @@ export default function TutorDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+              className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
             >
               <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${stat.bg}`}
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center mb-3 ${stat.bg}`}
               >
-                <stat.icon size={20} className={stat.color} />
+                <stat.icon size={18} className={stat.color} />
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-lg sm:text-2xl font-bold text-gray-900 break-all leading-tight">
                 {stat.value}
               </div>
               <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
@@ -206,7 +206,7 @@ export default function TutorDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Clock size={16} className="text-yellow-600" />
               Solicitudes pendientes
@@ -240,17 +240,17 @@ export default function TutorDashboard() {
                   return (
                     <div
                       key={session.id}
-                      className="border border-gray-100 rounded-lg p-4"
+                      className="border border-gray-100 rounded-lg p-3 sm:p-4"
                     >
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm flex-shrink-0">
                           {session.student.name.charAt(0)}
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-700 truncate">
                             {session.student.name}
                           </p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-gray-400 truncate">
                             {session.subject.name} · {date} {session.startTime}
                           </p>
                         </div>
@@ -287,7 +287,7 @@ export default function TutorDashboard() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Calendar size={16} className="text-blue-600" />
               Sesiones confirmadas
@@ -316,21 +316,21 @@ export default function TutorDashboard() {
                   return (
                     <div
                       key={session.id}
-                      className="border border-gray-100 rounded-lg p-4"
+                      className="border border-gray-100 rounded-lg p-3 sm:p-4"
                     >
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm">
+                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm flex-shrink-0">
                           {session.student.name.charAt(0)}
                         </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-700">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-700 truncate">
                             {session.student.name}
                           </p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-gray-400 truncate">
                             {session.subject.name} · {date} {session.startTime}
                           </p>
                         </div>
-                        <span className="text-orange-600 font-semibold text-sm">
+                        <span className="text-orange-600 font-semibold text-sm flex-shrink-0">
                           ${session.price}
                         </span>
                       </div>
@@ -372,21 +372,21 @@ export default function TutorDashboard() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <DollarSign size={16} className="text-orange-600" />
               Resumen de ganancias
             </h3>
             <div className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-gray-50">
+              <div className="flex justify-between items-center py-2 border-b border-gray-50 gap-3">
                 <span className="text-sm text-gray-500">Saldo disponible</span>
-                <span className="font-semibold text-gray-900">
+                <span className="font-semibold text-gray-900 break-all text-right">
                   ${wallet?.balance?.toFixed(2) || "0.00"}
                 </span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-50">
+              <div className="flex justify-between items-center py-2 border-b border-gray-50 gap-3">
                 <span className="text-sm text-gray-500">Ganancias totales</span>
-                <span className="font-semibold text-green-600">
+                <span className="font-semibold text-green-600 break-all text-right">
                   ${wallet?.lifetimeEarned?.toFixed(2) || "0.00"}
                 </span>
               </div>
@@ -401,7 +401,7 @@ export default function TutorDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <h3 className="font-semibold text-gray-900 mb-4">
               Acciones rápidas
             </h3>
@@ -435,7 +435,7 @@ export default function TutorDashboard() {
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center ${action.bg}`}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${action.bg}`}
                   >
                     <action.icon size={16} className={action.color} />
                   </div>

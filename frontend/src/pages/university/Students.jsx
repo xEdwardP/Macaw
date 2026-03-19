@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Search, Users, DollarSign, Building } from "lucide-react";
+import {
+  Search,
+  Users,
+  DollarSign,
+  Building,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { useForm } from "react-hook-form";
 import { useAuthStore } from "../../store/authStore";
@@ -69,8 +76,7 @@ function SubsidyModal({
                 min="1"
                 step="0.5"
                 placeholder="0.00"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg
-                focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               {errors.amount && (
                 <p className="text-red-500 text-xs mt-1">
@@ -86,8 +92,7 @@ function SubsidyModal({
                 {...register("reason", { required: "Ingresa un motivo" })}
                 rows={3}
                 placeholder="Ej: Apoyo académico estudiante en riesgo..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg
-                focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
               />
               {errors.reason && (
                 <p className="text-red-500 text-xs mt-1">
@@ -100,8 +105,7 @@ function SubsidyModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 border border-gray-300 text-gray-700
-              rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
             >
               Cancelar
             </button>
@@ -110,8 +114,7 @@ function SubsidyModal({
               disabled={
                 isPending || !universityBalance || universityBalance <= 0
               }
-              className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white
-              rounded-lg transition-colors text-sm disabled:opacity-50"
+              className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
             >
               {isPending ? "Aplicando..." : "Aplicar subsidio"}
             </button>
@@ -126,13 +129,15 @@ export default function UniversityStudents() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [subsidyStudent, setSubsidyStudent] = useState(null);
+  const limit = 10;
 
-  const { data: students, isLoading } = useQuery({
-    queryKey: ["students", search],
+  const { data: studentsData, isLoading } = useQuery({
+    queryKey: ["students", search, page],
     queryFn: () =>
       api
-        .get("/universities/students", { params: { search } })
+        .get("/universities/students", { params: { search, page, limit } })
         .then((r) => r.data.data),
   });
 
@@ -142,6 +147,12 @@ export default function UniversityStudents() {
   });
 
   const universityBalance = analytics?.overview?.universityBalance || 0;
+
+  const students = studentsData?.data || [];
+  const total = studentsData?.total || 0;
+  const totalPages = studentsData?.totalPages || 1;
+  const from = total === 0 ? 0 : (page - 1) * limit + 1;
+  const to = Math.min(page * limit, total);
 
   const { mutate: applySubsidy, isPending } = useMutation({
     mutationFn: (data) => walletService.addSubsidy(data),
@@ -157,26 +168,26 @@ export default function UniversityStudents() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Estudiantes</h1>
         <p className="text-gray-500 mb-6">
           Gestiona los estudiantes de tu universidad
         </p>
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
               <DollarSign size={20} className="text-green-600" />
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-700">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-700 truncate">
                 Balance disponible para subsidios
               </p>
               <p className="text-xs text-gray-400">Fondos de la universidad</p>
             </div>
           </div>
           <span
-            className={`text-2xl font-bold ${universityBalance > 0 ? "text-green-600" : "text-red-500"}`}
+            className={`text-xl sm:text-2xl font-bold flex-shrink-0 ${universityBalance > 0 ? "text-green-600" : "text-red-500"}`}
           >
             ${universityBalance?.toFixed(2) || "0.00"}
           </span>
@@ -191,9 +202,11 @@ export default function UniversityStudents() {
             type="text"
             placeholder="Buscar por nombre o email..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white
-            focus:outline-none focus:ring-2 focus:ring-orange-500"
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </div>
 
@@ -211,7 +224,7 @@ export default function UniversityStudents() {
               </div>
             ))}
           </div>
-        ) : (students || []).length === 0 ? (
+        ) : students.length === 0 ? (
           <div className="text-center py-20">
             <Users className="mx-auto text-gray-300 mb-4" size={48} />
             <h3 className="text-lg font-medium text-gray-900">
@@ -219,79 +232,107 @@ export default function UniversityStudents() {
             </h3>
           </div>
         ) : (
-          <div className="space-y-3">
-            {(students || []).map((student, i) => {
-              const totalSessions = student.sessionsAsStudent?.length || 0;
-              const completed =
-                student.sessionsAsStudent?.filter(
-                  (s) => s.status === "completed",
-                ).length || 0;
+          <>
+            <div className="space-y-3">
+              {students.map((student, i) => {
+                const totalSessions = student.sessionsAsStudent?.length || 0;
+                const completed =
+                  student.sessionsAsStudent?.filter(
+                    (s) => s.status === "completed",
+                  ).length || 0;
 
-              return (
-                <motion.div
-                  key={student.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                  className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="w-10 h-10 rounded-full bg-blue-100 flex items-center
-                    justify-center text-blue-600 font-bold flex-shrink-0"
-                    >
-                      {student.name.charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900">
-                        {student.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">{student.email}</p>
-                      {student.faculty && (
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <Building size={11} className="text-gray-300" />
-                          <span className="text-xs text-gray-400">
-                            {student.faculty.name}
-                          </span>
+                return (
+                  <motion.div
+                    key={student.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold flex-shrink-0">
+                        {student.name.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 truncate">
+                          {student.name}
+                        </h3>
+                        <p className="text-sm text-gray-500 truncate">
+                          {student.email}
+                        </p>
+                        {student.faculty && (
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <Building
+                              size={11}
+                              className="text-gray-300 flex-shrink-0"
+                            />
+                            <span className="text-xs text-gray-400 truncate">
+                              {student.faculty.name}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-6 mt-3">
+                          <div className="text-center">
+                            <p className="font-semibold text-gray-900 text-sm">
+                              {totalSessions}
+                            </p>
+                            <p className="text-xs text-gray-400">sesiones</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="font-semibold text-green-600 text-sm">
+                              {completed}
+                            </p>
+                            <p className="text-xs text-gray-400">completadas</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="font-semibold text-orange-600 text-sm">
+                              ${student.wallet?.balance?.toFixed(2) || "0.00"}
+                            </p>
+                            <p className="text-xs text-gray-400">saldo</p>
+                          </div>
+                          <button
+                            onClick={() => setSubsidyStudent(student)}
+                            disabled={universityBalance <= 0}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 border border-orange-200 text-orange-600 hover:bg-orange-100 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <DollarSign size={14} />
+                            Subsidiar
+                          </button>
                         </div>
-                      )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-6 text-sm">
-                      <div className="text-center">
-                        <p className="font-semibold text-gray-900">
-                          {totalSessions}
-                        </p>
-                        <p className="text-xs text-gray-400">sesiones</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="font-semibold text-green-600">
-                          {completed}
-                        </p>
-                        <p className="text-xs text-gray-400">completadas</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="font-semibold text-orange-600">
-                          ${student.wallet?.balance?.toFixed(2) || "0.00"}
-                        </p>
-                        <p className="text-xs text-gray-400">saldo</p>
-                      </div>
-                      <button
-                        onClick={() => setSubsidyStudent(student)}
-                        disabled={universityBalance <= 0}
-                        className="flex items-center gap-2 px-3 py-2 bg-orange-50
-                        border border-orange-200 text-orange-600 hover:bg-orange-100
-                        rounded-lg transition-colors text-sm font-medium
-                        disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <DollarSign size={14} />
-                        Subsidiar
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-3">
+              <p className="text-sm text-gray-500">
+                Mostrando {from}-{to} de {total} estudiantes
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                  disabled={page === 1}
+                  className="flex items-center gap-1 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft size={14} />
+                  Anterior
+                </button>
+                <span className="text-sm text-gray-500">
+                  {page} de {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                  disabled={page === totalPages}
+                  className="flex items-center gap-1 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Siguiente
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
 

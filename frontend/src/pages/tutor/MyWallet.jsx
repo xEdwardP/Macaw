@@ -11,6 +11,8 @@ import {
   Plus,
   X,
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -62,6 +64,8 @@ const TYPE_CONFIG = {
     icon: ArrowUpCircle,
   },
 };
+
+const limit = 10;
 
 function WithdrawalModal({ wallet, onClose, onSuccess }) {
   const {
@@ -129,8 +133,7 @@ function WithdrawalModal({ wallet, onClose, onSuccess }) {
               min="1"
               step="0.01"
               placeholder="0.00"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg
-              focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             {errors.amount && (
               <p className="text-red-500 text-xs mt-1">
@@ -153,8 +156,7 @@ function WithdrawalModal({ wallet, onClose, onSuccess }) {
               })}
               type="email"
               placeholder="tu@paypal.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg
-              focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             {errors.paypalEmail && (
               <p className="text-red-500 text-xs mt-1">
@@ -180,16 +182,14 @@ function WithdrawalModal({ wallet, onClose, onSuccess }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 border border-gray-300 text-gray-700
-              rounded-lg hover:bg-gray-50 transition-colors text-sm"
+              className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white
-              rounded-lg transition-colors text-sm disabled:opacity-50"
+              className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
             >
               {isPending ? "Enviando..." : "Solicitar retiro"}
             </button>
@@ -202,6 +202,7 @@ function WithdrawalModal({ wallet, onClose, onSuccess }) {
 
 export default function TutorMyWallet() {
   const [showWithdrawal, setShowWithdrawal] = useState(false);
+  const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
 
   const { data: wallet, isLoading: loadingWallet } = useQuery({
@@ -210,9 +211,11 @@ export default function TutorMyWallet() {
   });
 
   const { data: txData, isLoading: loadingTx } = useQuery({
-    queryKey: ["transactions"],
+    queryKey: ["transactions", page],
     queryFn: () =>
-      walletService.getTransactions({ limit: 20 }).then((r) => r.data.data),
+      walletService
+        .getTransactions({ limit, offset: (page - 1) * limit })
+        .then((r) => r.data.data),
   });
 
   const { data: withdrawals } = useQuery({
@@ -221,36 +224,40 @@ export default function TutorMyWallet() {
   });
 
   const transactions = txData?.transactions || [];
+  const total = txData?.total || 0;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const from = total === 0 ? 0 : (page - 1) * limit + 1;
+  const to = Math.min(page * limit, total);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-2">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+        <div className="flex items-center justify-between mb-2 gap-3">
           <h1 className="text-3xl font-bold text-gray-900">Mi Wallet</h1>
           <button
             onClick={() => setShowWithdrawal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-600
-            hover:bg-orange-700 text-white rounded-xl transition-colors font-medium text-sm"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-colors font-medium text-sm flex-shrink-0"
           >
             <Plus size={16} />
-            Solicitar retiro
+            <span className="hidden sm:block">Solicitar retiro</span>
+            <span className="sm:hidden">Retirar</span>
           </button>
         </div>
         <p className="text-gray-500 mb-8">
           Ganancias e historial de transacciones
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-orange-600 rounded-xl p-6 text-white"
+            className="bg-orange-600 rounded-xl p-5 sm:p-6 text-white"
           >
             <div className="flex items-center gap-2 mb-2">
               <DollarSign size={18} />
               <span className="text-sm opacity-80">Saldo disponible</span>
             </div>
-            <div className="text-3xl font-bold">
+            <div className="text-2xl sm:text-3xl font-bold break-all">
               ${loadingWallet ? "..." : wallet?.balance?.toFixed(2) || "0.00"}
             </div>
           </motion.div>
@@ -259,13 +266,13 @@ export default function TutorMyWallet() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl border border-gray-100 shadow-sm p-6"
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6"
           >
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp size={18} className="text-green-600" />
               <span className="text-sm text-gray-500">Total ganado</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 break-all">
               $
               {loadingWallet
                 ? "..."
@@ -277,20 +284,20 @@ export default function TutorMyWallet() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-xl border border-gray-100 shadow-sm p-6"
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6"
           >
             <div className="flex items-center gap-2 mb-2">
               <Clock size={18} className="text-yellow-600" />
               <span className="text-sm text-gray-500">Congelado</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 break-all">
               ${loadingWallet ? "..." : wallet?.frozen?.toFixed(2) || "0.00"}
             </div>
           </motion.div>
         </div>
 
         {withdrawals?.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6 mb-6">
             <h3 className="font-semibold text-gray-900 mb-4">
               Solicitudes de retiro
             </h3>
@@ -298,13 +305,15 @@ export default function TutorMyWallet() {
               {withdrawals.map((w) => (
                 <div
                   key={w.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg gap-3"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-medium text-gray-700">
                       ${w.amount.toFixed(2)} USD
                     </p>
-                    <p className="text-xs text-gray-400">{w.paypalEmail}</p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {w.paypalEmail}
+                    </p>
                     <p className="text-xs text-gray-400">
                       {new Date(w.createdAt).toLocaleDateString("es-HN", {
                         day: "numeric",
@@ -314,7 +323,7 @@ export default function TutorMyWallet() {
                     </p>
                   </div>
                   <span
-                    className={`text-xs px-2 py-1 rounded-full font-medium
+                    className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap flex-shrink-0
                     ${
                       w.status === "pending"
                         ? "bg-yellow-100 text-yellow-700"
@@ -335,7 +344,7 @@ export default function TutorMyWallet() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6">
           <h3 className="font-semibold text-gray-900 mb-6">
             Historial de transacciones
           </h3>
@@ -358,57 +367,85 @@ export default function TutorMyWallet() {
               No hay transacciones aun
             </p>
           ) : (
-            <div className="space-y-4">
-              {transactions.map((tx, i) => {
-                const config = TYPE_CONFIG[tx.type] || TYPE_CONFIG.released;
-                const Icon = config.icon;
-                const isPositive = [
-                  "recharge",
-                  "released",
-                  "subsidy",
-                  "refund",
-                ].includes(tx.type);
-                const date = new Date(tx.createdAt).toLocaleDateString(
-                  "es-HN",
-                  {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  },
-                );
+            <>
+              <div className="space-y-1">
+                {transactions.map((tx, i) => {
+                  const config = TYPE_CONFIG[tx.type] || TYPE_CONFIG.released;
+                  const Icon = config.icon;
+                  const isPositive = [
+                    "recharge",
+                    "released",
+                    "subsidy",
+                    "refund",
+                  ].includes(tx.type);
+                  const date = new Date(tx.createdAt).toLocaleDateString(
+                    "es-HN",
+                    {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    },
+                  );
 
-                return (
-                  <motion.div
-                    key={tx.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="flex items-center gap-4 py-3 border-b border-gray-50 last:border-0"
+                  return (
+                    <motion.div
+                      key={tx.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.03 }}
+                      className="flex items-center gap-3 sm:gap-4 py-3 border-b border-gray-50 last:border-0"
+                    >
+                      <div
+                        className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${config.bg}`}
+                      >
+                        <Icon size={16} className={config.color} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-700">
+                          {config.label}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">
+                          {tx.description}
+                        </p>
+                        <p className="text-xs text-gray-400">{date}</p>
+                      </div>
+                      <span
+                        className={`font-semibold text-sm flex-shrink-0 ${isPositive ? "text-green-600" : "text-red-500"}`}
+                      >
+                        {isPositive ? "+" : "-"}${tx.amount.toFixed(2)}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-between mt-6 pt-4 border-t border-gray-100 gap-3">
+                <p className="text-sm text-gray-500">
+                  Mostrando {from}-{to} de {total} transacciones
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                    disabled={page === 1}
+                    className="flex items-center gap-1 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${config.bg}`}
-                    >
-                      <Icon size={18} className={config.color} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-700">
-                        {config.label}
-                      </p>
-                      <p className="text-xs text-gray-400 truncate">
-                        {tx.description}
-                      </p>
-                      <p className="text-xs text-gray-400">{date}</p>
-                    </div>
-                    <span
-                      className={`font-semibold text-sm flex-shrink-0
-                      ${isPositive ? "text-green-600" : "text-red-500"}`}
-                    >
-                      {isPositive ? "+" : "-"}${tx.amount.toFixed(2)}
-                    </span>
-                  </motion.div>
-                );
-              })}
-            </div>
+                    <ChevronLeft size={14} />
+                    Anterior
+                  </button>
+                  <span className="text-sm text-gray-500">
+                    {page} de {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                    disabled={page === totalPages}
+                    className="flex items-center gap-1 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Siguiente
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
       </div>

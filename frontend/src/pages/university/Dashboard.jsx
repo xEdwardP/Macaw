@@ -24,11 +24,11 @@ export default function UniversityDashboard() {
     queryFn: () => api.get("/universities/students").then((r) => r.data.data),
   });
 
-  const students = studentsData || [];
+  const students = studentsData?.data || studentsData || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -51,7 +51,7 @@ export default function UniversityDashboard() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-8">
             {[
               {
                 label: "Estudiantes",
@@ -82,7 +82,7 @@ export default function UniversityDashboard() {
                 bg: "bg-purple-50",
               },
               {
-                label: "Balance universitario",
+                label: "Balance",
                 value: `$${analytics?.overview?.universityBalance?.toFixed(2) || "0.00"}`,
                 icon: DollarSign,
                 color: "text-green-600",
@@ -94,14 +94,14 @@ export default function UniversityDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
               >
                 <div
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${stat.bg}`}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center mb-3 ${stat.bg}`}
                 >
-                  <stat.icon size={20} className={stat.color} />
+                  <stat.icon size={18} className={stat.color} />
                 </div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className="text-xl sm:text-2xl font-bold text-gray-900 break-all leading-tight">
                   {stat.value}
                 </div>
                 <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
@@ -111,30 +111,27 @@ export default function UniversityDashboard() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Star size={16} className="text-orange-600" />
               Mejores tutores
             </h3>
-            {analytics?.topTutors?.length === 0 ? (
+            {!analytics?.topTutors?.length ? (
               <p className="text-sm text-gray-400 text-center py-6">
                 No hay datos aún
               </p>
             ) : (
               <div className="space-y-3">
-                {analytics?.topTutors?.map((tutor, i) => (
+                {analytics.topTutors.map((tutor, i) => (
                   <div key={tutor.id} className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-gray-400 w-5">
+                    <span className="text-sm font-bold text-gray-400 w-5 flex-shrink-0">
                       {i + 1}
                     </span>
-                    <div
-                      className="w-8 h-8 rounded-full bg-orange-100 flex items-center
-                    justify-center text-orange-600 font-bold text-sm"
-                    >
+                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm flex-shrink-0">
                       {tutor.name.charAt(0)}
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-700">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-700 truncate">
                         {tutor.name}
                       </p>
                       <p className="text-xs text-gray-400">
@@ -142,7 +139,7 @@ export default function UniversityDashboard() {
                         {tutor.tutorProfile?.averageRating?.toFixed(1)} rating
                       </p>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 flex-shrink-0">
                       <Star
                         size={12}
                         className="text-yellow-400 fill-yellow-400"
@@ -157,31 +154,29 @@ export default function UniversityDashboard() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <BookOpen size={16} className="text-orange-600" />
               Materias más solicitadas
             </h3>
-            {analytics?.topSubjects?.length === 0 ? (
+            {!analytics?.topSubjects?.length ? (
               <p className="text-sm text-gray-400 text-center py-6">
                 No hay datos aún
               </p>
             ) : (
               <div className="space-y-3">
-                {analytics?.topSubjects?.map((subject, i) => (
+                {analytics.topSubjects.map((subject, i) => (
                   <div key={subject.id} className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-gray-400 w-5">
+                    <span className="text-sm font-bold text-gray-400 w-5 flex-shrink-0">
                       {i + 1}
                     </span>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-700">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-700 truncate">
                         {subject.name}
                       </p>
-                      <p className="text-xs text-gray-400">
-                        {subject.code} · {subject.area}
-                      </p>
+                      <p className="text-xs text-gray-400">{subject.code}</p>
                     </div>
-                    <span className="text-xs bg-orange-50 text-orange-700 px-2 py-1 rounded-full">
+                    <span className="text-xs bg-orange-50 text-orange-700 px-2 py-1 rounded-full flex-shrink-0">
                       {subject._count.sessions} sesiones
                     </span>
                   </div>
@@ -190,18 +185,18 @@ export default function UniversityDashboard() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <TrendingUp size={16} className="text-orange-600" />
               Sesiones recientes
             </h3>
-            {analytics?.recentSessions?.length === 0 ? (
+            {!analytics?.recentSessions?.length ? (
               <p className="text-sm text-gray-400 text-center py-6">
                 No hay sesiones aún
               </p>
             ) : (
               <div className="space-y-3">
-                {analytics?.recentSessions?.slice(0, 5).map((session) => {
+                {analytics.recentSessions.slice(0, 5).map((session) => {
                   const [year, month, day] = session.date
                     .split("T")[0]
                     .split("-")
@@ -219,10 +214,7 @@ export default function UniversityDashboard() {
                       key={session.id}
                       className="flex items-center gap-3 text-sm"
                     >
-                      <div
-                        className="w-8 h-8 rounded-full bg-gray-100 flex items-center
-                      justify-center text-gray-600 font-bold text-xs flex-shrink-0"
-                      >
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-xs flex-shrink-0">
                         {session.student.name.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -254,28 +246,28 @@ export default function UniversityDashboard() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <DollarSign size={16} className="text-orange-600" />
               Resumen de subsidios
             </h3>
 
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 flex items-center justify-between">
-              <div>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 flex items-center justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-sm font-medium text-gray-700">
                   Balance disponible
                 </p>
                 <p className="text-xs text-gray-400">Fondos para subsidios</p>
               </div>
-              <span className="text-2xl font-bold text-green-600">
+              <span className="text-xl sm:text-2xl font-bold text-green-600 break-all text-right">
                 ${analytics?.overview?.universityBalance?.toFixed(2) || "0.00"}
               </span>
             </div>
 
             <div className="space-y-3">
-              <div className="flex justify-between items-center py-2 border-b border-gray-50">
+              <div className="flex justify-between items-center py-2 border-b border-gray-50 gap-3">
                 <span className="text-sm text-gray-500">Total subsidiado</span>
-                <span className="font-semibold text-green-600">
+                <span className="font-semibold text-green-600 break-all text-right">
                   $
                   {analytics?.overview?.totalSubsidiesAmount?.toFixed(2) ||
                     "0.00"}

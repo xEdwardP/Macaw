@@ -52,9 +52,10 @@ export default function StudentDashboard() {
     (s) => s.status === "completed",
   ).length;
   const recommendations = aiData?.recommendations || [];
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -66,7 +67,7 @@ export default function StudentDashboard() {
           <p className="text-gray-500 mt-1">Bienvenido de vuelta a Macaw</p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
           {[
             {
               label: "Saldo disponible",
@@ -102,14 +103,14 @@ export default function StudentDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+              className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sm:p-5"
             >
               <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${stat.bg}`}
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center mb-3 ${stat.bg}`}
               >
-                <stat.icon size={20} className={stat.color} />
+                <stat.icon size={18} className={stat.color} />
               </div>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-lg sm:text-2xl font-bold text-gray-900 break-all leading-tight">
                 {stat.value}
               </div>
               <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
@@ -119,7 +120,7 @@ export default function StudentDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900">
                   Próximas sesiones
@@ -165,25 +166,22 @@ export default function StudentDashboard() {
                     return (
                       <div
                         key={session.id}
-                        className="flex items-center gap-4 p-3 rounded-lg bg-gray-50"
+                        className="flex items-center gap-3 p-3 rounded-lg bg-gray-50"
                       >
-                        <div
-                          className="w-10 h-10 rounded-full bg-orange-100 flex items-center
-                        justify-center text-orange-600 font-bold flex-shrink-0"
-                        >
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold flex-shrink-0">
                           {session.tutor.name.charAt(0)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-700">
+                          <p className="text-sm font-medium text-gray-700 truncate">
                             {session.subject.name}
                           </p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-gray-400 truncate">
                             con {session.tutor.name} · {date}{" "}
                             {session.startTime}
                           </p>
                         </div>
                         <span
-                          className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 ${status.color}`}
+                          className={`text-xs px-2 py-1 rounded-full font-medium flex-shrink-0 whitespace-nowrap ${status.color}`}
                         >
                           {status.label}
                         </span>
@@ -196,7 +194,7 @@ export default function StudentDashboard() {
           </div>
 
           <div className="space-y-4">
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6">
               <h3 className="font-semibold text-gray-900 mb-4">
                 Acciones rápidas
               </h3>
@@ -230,7 +228,7 @@ export default function StudentDashboard() {
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center ${action.bg}`}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${action.bg}`}
                     >
                       <action.icon size={16} className={action.color} />
                     </div>
@@ -244,7 +242,7 @@ export default function StudentDashboard() {
             </div>
 
             {recommendations.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 sm:p-6">
                 <h3 className="font-semibold text-gray-900 mb-1">
                   Recomendados para ti
                 </h3>
@@ -258,10 +256,7 @@ export default function StudentDashboard() {
                       to={`/tutors/${rec.tutorId}`}
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
                     >
-                      <div
-                        className="w-8 h-8 rounded-full bg-orange-100 flex items-center
-                      justify-center text-orange-600 font-bold text-sm flex-shrink-0"
-                      >
+                      <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm flex-shrink-0">
                         {rec.tutor?.name?.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">

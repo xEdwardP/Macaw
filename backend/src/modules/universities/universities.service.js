@@ -117,7 +117,7 @@ const getAnalytics = async (user) => {
   };
 };
 
-const getStudents = async (user, { search }) => {
+const getStudents = async (user, { search, page = 1, limit = 10 }) => {
   const universityId = user.role === "admin" ? undefined : user.universityId;
   const where = {
     role: "student",
@@ -131,24 +131,37 @@ const getStudents = async (user, { search }) => {
     ];
   }
 
-  return await prisma.user.findMany({
-    where,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      career: true,
-      quarter: true,
-      gpa: true,
-      facultyId: true,
-      faculty: { select: { id: true, name: true, code: true } },
-      wallet: { select: { balance: true } },
-      sessionsAsStudent: {
-        select: { id: true, status: true },
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  const [data, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        career: true,
+        quarter: true,
+        gpa: true,
+        facultyId: true,
+        faculty: { select: { id: true, name: true, code: true } },
+        wallet: { select: { balance: true } },
+        sessionsAsStudent: { select: { id: true, status: true } },
       },
-    },
-    orderBy: { name: "asc" },
-  });
+      orderBy: { name: "asc" },
+      take: parseInt(limit),
+      skip: offset,
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  return {
+    data,
+    total,
+    page: parseInt(page),
+    limit: parseInt(limit),
+    totalPages: Math.ceil(total / parseInt(limit)),
+  };
 };
 
 const getSubsidies = async (user) => {
