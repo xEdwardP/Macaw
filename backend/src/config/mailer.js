@@ -11,6 +11,7 @@ const transporter = nodemailer.createTransport({
   connectionTimeout: 5000,
   greetingTimeout: 5000,
   socketTimeout: 5000,
+  family: 4,
 });
 
 const sendMail = async ({ to, subject, html }) => {
