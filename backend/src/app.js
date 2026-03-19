@@ -1,9 +1,10 @@
 require("dotenv").config();
-const { scheduleReminders } = require('./jobs/sessionReminders')
+const { scheduleReminders } = require("./jobs/sessionReminders");
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const rateLimit = require("express-rate-limit");
 const http = require("http");
 const { Server } = require("socket.io");
 const { scheduleAutoConfirm } = require("./jobs/autoConfirm");
@@ -28,6 +29,18 @@ app.set("io", io);
 scheduleReminders();
 scheduleAutoConfirm();
 
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: {
+    success: false,
+    message: "Demasiadas peticiones, intenta más tarde",
+  },
+});
+
+app.use("/api", limiter);
+
 // Middlewares
 app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
@@ -46,8 +59,8 @@ app.use(
   "/api/universities",
   require("./modules/universities/universities.routes"),
 );
-app.use('/api/paypal', require('./modules/wallet/paypal.routes'));
-app.use('/api/withdrawals', require('./modules/wallet/withdrawal.routes'));
+app.use("/api/paypal", require("./modules/wallet/paypal.routes"));
+app.use("/api/withdrawals", require("./modules/wallet/withdrawal.routes"));
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -62,5 +75,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () =>
-  console.log(`Macaw API corriendo en http://localhost:${PORT}`),
+  console.log(`Macaw API corriendo`),
 );
