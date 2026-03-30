@@ -8,6 +8,7 @@ const ctrl = require("./tutors.controller");
 router.get("/", ctrl.getAll);
 router.get("/:id", ctrl.getOne);
 router.get("/:id/availability", ctrl.getAvailability);
+router.get("/:id/booked-slots", ctrl.getBookedSlots);
 router.put("/profile", authenticate, authorize("tutor"), ctrl.updateProfile);
 router.post("/subjects", authenticate, authorize("tutor"), ctrl.addSubject);
 router.delete(

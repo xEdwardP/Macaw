@@ -48,20 +48,38 @@ const removeSubject = async (req, res) => {
 
 const getAvailability = async (req, res) => {
   try {
-    const result = await service.getAvailability(req.params.id)
-    return response.ok(res, result)
+    const result = await service.getAvailability(req.params.id);
+    return response.ok(res, result);
   } catch (err) {
-    return response.error(res, err.message)
+    return response.error(res, err.message);
   }
-}
+};
 
 const setAvailability = async (req, res) => {
   try {
-    const result = await service.setAvailability(req.user.id, req.body.slots)
-    return response.ok(res, result, 'Disponibilidad actualizada')
+    const result = await service.setAvailability(req.user.id, req.body.slots);
+    return response.ok(res, result, "Disponibilidad actualizada");
   } catch (err) {
-    return response.error(res, err.message)
+    return response.error(res, err.message);
   }
-}
+};
 
-module.exports = { getAll, getOne, updateProfile, addSubject, removeSubject, getAvailability, setAvailability }
+const getBookedSlots = async (req, res) => {
+  try {
+    const result = await service.getBookedSlots(req.params.id, req.query.date);
+    return response.ok(res, result);
+  } catch (err) {
+    return response.error(res, err.message);
+  }
+};
+
+module.exports = {
+  getAll,
+  getOne,
+  updateProfile,
+  addSubject,
+  removeSubject,
+  getAvailability,
+  setAvailability,
+  getBookedSlots,
+};

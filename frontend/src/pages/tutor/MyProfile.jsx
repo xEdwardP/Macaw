@@ -18,6 +18,7 @@ import toast from "react-hot-toast";
 import { tutorsService } from "../../services/tutors.service";
 import { useAuthStore } from "../../store/authStore";
 import api from "../../services/api";
+import { useEffect } from "react";
 
 const DAYS = [
   "",
@@ -88,9 +89,13 @@ export default function TutorMyProfile() {
     },
   });
 
-  const [availability, setAvailability] = useState(
-    tutor?.tutorProfile?.availability || [],
-  );
+  const [availability, setAvailability] = useState([]);
+
+  useEffect(() => {
+    if (tutor?.tutorProfile?.availability) {
+      setAvailability(tutor.tutorProfile.availability);
+    }
+  }, [tutor]);
   const [newSlot, setNewSlot] = useState({
     dayOfWeek: 1,
     startTime: "08:00",

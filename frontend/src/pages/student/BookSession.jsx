@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
   ChevronLeft,
@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 import { tutorsService } from "../../services/tutors.service";
 import { sessionsService } from "../../services/sessions.service";
 import { walletService } from "../../services/wallet.service";
+import { getTodayDateString } from "../../utils/dateTime";
 
 const schema = z.object({
   subjectId: z.string().min(1, "Selecciona una materia"),
@@ -24,23 +25,6 @@ const schema = z.object({
   startTime: z.string().min(1, "Selecciona una hora"),
   notes: z.string().optional(),
 });
-
-const HOURS = [
-  "07:00",
-  "08:00",
-  "09:00",
-  "10:00",
-  "11:00",
-  "12:00",
-  "13:00",
-  "14:00",
-  "15:00",
-  "16:00",
-  "17:00",
-  "18:00",
-  "19:00",
-  "20:00",
-];
 
 const DAYS = [
   "",
@@ -52,6 +36,23 @@ const DAYS = [
   "Sábado",
   "Domingo",
 ];
+
+const generateHoursInRange = (startTime, endTime) => {
+  const hours = [];
+  let current = parseInt(startTime.split(":")[0]);
+  const end = parseInt(endTime.split(":")[0]);
+  while (current < end) {
+    hours.push(`${String(current).padStart(2, "0")}:00`);
+    current++;
+  }
+  return hours;
+};
+
+const getWeekdayFromDateStr = (dateStr) => {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const jsDay = new Date(year, month - 1, day).getDay();
+  return jsDay === 0 ? 7 : jsDay;
+};
 
 export default function BookSession() {
   const { id } = useParams();
@@ -72,6 +73,7 @@ export default function BookSession() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
@@ -80,6 +82,33 @@ export default function BookSession() {
   const selectedDate = watch("date");
   const selectedStartTime = watch("startTime");
   const selectedSubjectId = watch("subjectId");
+
+  useEffect(() => {
+    setValue("startTime", "");
+  }, [selectedDate]);
+
+  const price = tutor?.tutorProfile?.hourlyRate || 0;
+  const hasBalance = wallet?.balance >= price;
+
+  const availableDays = [
+    ...new Set(
+      tutor?.tutorProfile?.availability?.map((a) => a.dayOfWeek) || [],
+    ),
+  ];
+
+  const isDateAvailable = (dateStr) => {
+    if (!dateStr) return false;
+    return availableDays.includes(getWeekdayFromDateStr(dateStr));
+  };
+
+  const { data: bookedSlots = [] } = useQuery({
+    queryKey: ["bookedSlots", id, selectedDate],
+    queryFn: () =>
+      tutorsService.getBookedSlots(id, selectedDate).then((r) => r.data.data),
+    enabled: !!selectedDate && isDateAvailable(selectedDate),
+  });
+
+  const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data) =>
@@ -94,7 +123,9 @@ export default function BookSession() {
         notes: data.notes,
       }),
     onSuccess: () => {
-      toast.success("Sesion reservada exitosamente");
+      queryClient.invalidateQueries(["bookedSlots", id]);
+      queryClient.invalidateQueries(["wallet"]);
+      toast.success("Sesión reservada exitosamente");
       setTimeout(() => navigate("/student/sessions"), 1000);
     },
     onError: (err) => {
@@ -102,25 +133,29 @@ export default function BookSession() {
     },
   });
 
-  const price = tutor?.tutorProfile?.hourlyRate || 0;
-  const hasBalance = wallet?.balance >= price;
-  const availableDays = [
-    ...new Set(
-      tutor?.tutorProfile?.availability?.map((a) => a.dayOfWeek) || [],
-    ),
-  ];
+  const availableHours = (() => {
+    if (!selectedDate || !isDateAvailable(selectedDate)) return [];
+    const weekday = getWeekdayFromDateStr(selectedDate);
+    const block = tutor?.tutorProfile?.availability?.find(
+      (a) => a.dayOfWeek === weekday,
+    );
+    if (!block) return [];
+    return generateHoursInRange(block.startTime, block.endTime);
+  })();
 
-  const isDateAvailable = (dateStr) => {
-    if (!dateStr) return false;
-    const [year, month, day] = dateStr.split("-").map(Number);
-    const date = new Date(year, month - 1, day);
-    const jsDay = date.getDay();
-    const adjustedDay = jsDay === 0 ? 7 : jsDay;
-    return availableDays.includes(adjustedDay);
+  const isHourBooked = (hour) => {
+    const hourEnd = `${String(parseInt(hour) + 1).padStart(2, "0")}:00`;
+    return bookedSlots.some(
+      (slot) => hour < slot.endTime && hourEnd > slot.startTime,
+    );
   };
 
   const selectedSubject = tutor?.tutorProfile?.subjects?.find(
     (s) => s.subject.id === selectedSubjectId,
+  );
+
+  const selectedDayBlock = tutor?.tutorProfile?.availability?.find(
+    (a) => selectedDate && a.dayOfWeek === getWeekdayFromDateStr(selectedDate),
   );
 
   return (
@@ -148,18 +183,13 @@ export default function BookSession() {
             <div key={s} className="flex items-center gap-2">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all
-                ${
-                  step >= s
-                    ? "bg-orange-600 text-white"
-                    : "bg-gray-200 text-gray-500"
-                }`}
+                ${step >= s ? "bg-orange-600 text-white" : "bg-gray-200 text-gray-500"}`}
               >
                 {s}
               </div>
               {s < 3 && (
                 <div
-                  className={`h-0.5 w-12 transition-all
-                  ${step > s ? "bg-orange-600" : "bg-gray-200"}`}
+                  className={`h-0.5 w-12 transition-all ${step > s ? "bg-orange-600" : "bg-gray-200"}`}
                 />
               )}
             </div>
@@ -225,13 +255,12 @@ export default function BookSession() {
                 <input
                   {...register("date")}
                   type="date"
-                  min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg
-                  focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  min={getTodayDateString()}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
                 {selectedDate && !isDateAvailable(selectedDate) && (
                   <p className="text-amber-600 text-xs mt-2">
-                    El tutor no tiene disponibilidad este dia. Selecciona otro.
+                    El tutor no tiene disponibilidad este día. Selecciona otro.
                   </p>
                 )}
                 {errors.date && (
@@ -239,21 +268,21 @@ export default function BookSession() {
                     {errors.date.message}
                   </p>
                 )}
-
                 <div className="mt-3">
                   <p className="text-xs text-gray-400 mb-2">
-                    Dias disponibles:
+                    Días disponibles:
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {availableDays.map((d) => (
-                      <span
-                        key={d}
-                        className="text-xs bg-green-50 text-green-700
-                      px-2 py-1 rounded-full border border-green-100"
-                      >
-                        {DAYS[d]}
-                      </span>
-                    ))}
+                    {tutor?.tutorProfile?.availability
+                      ?.sort((a, b) => a.dayOfWeek - b.dayOfWeek)
+                      .map((a) => (
+                        <span
+                          key={a.dayOfWeek}
+                          className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-100"
+                        >
+                          {DAYS[a.dayOfWeek]} {a.startTime}–{a.endTime}
+                        </span>
+                      ))}
                   </div>
                 </div>
               </div>
@@ -280,32 +309,59 @@ export default function BookSession() {
               className="space-y-6"
             >
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
                   <Clock size={16} className="text-orange-600" />
                   Hora de inicio
                 </h3>
+                {selectedDayBlock && (
+                  <p className="text-xs text-gray-400 mb-4">
+                    Horario disponible: {selectedDayBlock.startTime} —{" "}
+                    {selectedDayBlock.endTime}
+                  </p>
+                )}
                 <div className="grid grid-cols-4 gap-2">
-                  {HOURS.map((hour) => (
-                    <label key={hour} className="cursor-pointer">
-                      <input
-                        {...register("startTime")}
-                        type="radio"
-                        value={hour}
-                        className="sr-only"
-                      />
-                      <div
-                        className={`border-2 rounded-lg py-2 text-center text-sm transition-all
-                        ${
-                          selectedStartTime === hour
-                            ? "border-orange-500 bg-orange-50 text-orange-700 font-medium"
-                            : "border-gray-200 text-gray-600 hover:border-gray-300"
-                        }`}
+                  {availableHours.map((hour) => {
+                    const booked = isHourBooked(hour);
+                    return (
+                      <label
+                        key={hour}
+                        className={
+                          booked ? "cursor-not-allowed" : "cursor-pointer"
+                        }
                       >
-                        {hour}
-                      </div>
-                    </label>
-                  ))}
+                        <input
+                          {...register("startTime")}
+                          type="radio"
+                          value={hour}
+                          disabled={booked}
+                          className="sr-only"
+                        />
+                        <div
+                          className={`border-2 rounded-lg py-2 text-center text-sm transition-all relative
+                          ${
+                            booked
+                              ? "border-gray-100 bg-gray-50 text-gray-300 line-through"
+                              : selectedStartTime === hour
+                                ? "border-orange-500 bg-orange-50 text-orange-700 font-medium"
+                                : "border-gray-200 text-gray-600 hover:border-gray-300"
+                          }`}
+                        >
+                          {hour}
+                          {booked && (
+                            <span className="absolute -top-1.5 -right-1.5 text-[9px] bg-red-400 text-white rounded-full px-1">
+                              ocupado
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                    );
+                  })}
                 </div>
+                {availableHours.length === 0 && (
+                  <p className="text-sm text-gray-400 text-center py-4">
+                    No hay horas disponibles para este día.
+                  </p>
+                )}
                 {errors.startTime && (
                   <p className="text-red-500 text-xs mt-2">
                     {errors.startTime.message}
@@ -321,8 +377,7 @@ export default function BookSession() {
                   {...register("notes")}
                   placeholder="Describe los temas que necesitas repasar..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg
-                  focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
                 />
               </div>
 
@@ -330,17 +385,17 @@ export default function BookSession() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="flex-1 py-3 border border-gray-300 text-gray-700
-                  font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   Atrás
                 </button>
                 <button
                   type="button"
                   onClick={() => setStep(3)}
-                  disabled={!selectedStartTime}
-                  className="flex-1 py-3 bg-orange-600 hover:bg-orange-700 text-white
-                  font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={
+                    !selectedStartTime || isHourBooked(selectedStartTime)
+                  }
+                  className="flex-1 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continuar
                 </button>
@@ -380,11 +435,14 @@ export default function BookSession() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Hora</span>
                     <span className="font-medium text-gray-700">
-                      {selectedStartTime}
+                      {selectedStartTime} —{" "}
+                      {selectedStartTime?.replace(/(\d+)/, (h) =>
+                        String(parseInt(h) + 1).padStart(2, "0"),
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm pt-3 border-t border-gray-100">
-                    <span className="text-gray-500">Duracion</span>
+                    <span className="text-gray-500">Duración</span>
                     <span className="font-medium text-gray-700">1 hora</span>
                   </div>
                   <div className="flex justify-between text-sm font-semibold pt-2 border-t border-gray-100">
@@ -396,11 +454,7 @@ export default function BookSession() {
 
               <div
                 className={`rounded-xl border p-4 flex items-center justify-between
-                ${
-                  hasBalance
-                    ? "bg-green-50 border-green-200"
-                    : "bg-red-50 border-red-200"
-                }`}
+                ${hasBalance ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
               >
                 <div className="flex items-center gap-2">
                   <CreditCard
@@ -440,7 +494,7 @@ export default function BookSession() {
                     Videollamada incluida
                   </p>
                   <p className="text-xs text-blue-600 mt-1">
-                    Se generara un enlace de Jitsi Meet automaticamente al
+                    Se generará un enlace de Jitsi Meet automáticamente al
                     reservar.
                   </p>
                 </div>
@@ -450,16 +504,14 @@ export default function BookSession() {
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="flex-1 py-3 border border-gray-300 text-gray-700
-                  font-medium rounded-xl hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-3 border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   Atrás
                 </button>
                 <button
                   type="submit"
                   disabled={!hasBalance || isPending}
-                  className="flex-1 py-3 bg-orange-600 hover:bg-orange-700 text-white
-                  font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isPending ? "Reservando..." : "Confirmar reserva"}
                 </button>

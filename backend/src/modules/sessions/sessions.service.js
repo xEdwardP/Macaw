@@ -3,6 +3,13 @@ const prisma = new PrismaClient();
 const { sendMail } = require("../../config/mailer");
 const templates = require("../../utils/emailTemplates");
 const { getPlatformWallet } = require("../../config/platform");
+const {
+  getCurrentTime,
+  toAppTimezone,
+  getWeekday,
+  isSlotWithinBlock,
+  doSlotsOverlap,
+} = require("../../utils/dateTime");
 
 const sessionInclude = {
   student: { select: { id: true, name: true, email: true, avatar: true } },
@@ -13,7 +20,6 @@ const sessionInclude = {
 
 const getAll = async (user) => {
   const where = {};
-
   if (user.role === "student") where.studentId = user.id;
   if (user.role === "tutor") where.tutorId = user.id;
 
@@ -48,9 +54,86 @@ const create = async (
 ) => {
   const tutor = await prisma.user.findUnique({
     where: { id: tutorId, role: "tutor" },
-    include: { tutorProfile: true },
+    include: {
+      tutorProfile: {
+        include: { availability: true },
+      },
+    },
   });
   if (!tutor) throw new Error("Tutor no encontrado");
+
+  const sessionDay = getWeekday(date);
+  const availableBlock = tutor.tutorProfile.availability.find(
+    (a) => a.dayOfWeek === sessionDay,
+  );
+
+  if (!availableBlock) {
+    throw new Error("El tutor no tiene disponibilidad ese día");
+  }
+
+  if (
+    !isSlotWithinBlock(
+      availableBlock.startTime,
+      availableBlock.endTime,
+      startTime,
+      endTime,
+    )
+  ) {
+    throw new Error(
+      `El tutor solo atiende de ${availableBlock.startTime} a ${availableBlock.endTime} ese día`,
+    );
+  }
+
+  const now = getCurrentTime();
+  const [y, m, d] = date.split("-").map(Number);
+  const sessionDate = new Date(y, m - 1, d);
+  const today = new Date(getCurrentTime().toDateString());
+  if (sessionDate < today) {
+    throw new Error("No puedes reservar una sesión en el pasado");
+  }
+  if (sessionDate < now) {
+    throw new Error("No puedes reservar una sesión en el pasado");
+  }
+
+  const tutorConflict = await prisma.session.findFirst({
+    where: {
+      tutorId,
+      date: new Date(date),
+      status: { in: ["pending", "confirmed"] },
+    },
+  });
+
+  if (
+    tutorConflict &&
+    doSlotsOverlap(
+      startTime,
+      endTime,
+      tutorConflict.startTime,
+      tutorConflict.endTime,
+    )
+  ) {
+    throw new Error("El tutor ya tiene una sesión en ese horario");
+  }
+
+  const studentConflict = await prisma.session.findFirst({
+    where: {
+      studentId,
+      date: new Date(date),
+      status: { in: ["pending", "confirmed"] },
+    },
+  });
+
+  if (
+    studentConflict &&
+    doSlotsOverlap(
+      startTime,
+      endTime,
+      studentConflict.startTime,
+      studentConflict.endTime,
+    )
+  ) {
+    throw new Error("Ya tienes una sesión reservada en ese horario");
+  }
 
   const wallet = await prisma.wallet.findUnique({
     where: { userId: studentId },
@@ -172,7 +255,8 @@ const cancel = async (sessionId, user) => {
     throw new Error("La sesión no se puede cancelar");
 
   const hoursUntilSession =
-    (new Date(session.date) - new Date()) / (1000 * 60 * 60);
+    (toAppTimezone(new Date(session.date)) - getCurrentTime()) /
+    (1000 * 60 * 60);
   const isLateCancellation =
     hoursUntilSession < 24 && session.status === "confirmed";
 
@@ -188,6 +272,7 @@ const cancel = async (sessionId, user) => {
     const studentWallet = await tx.wallet.findUnique({
       where: { userId: session.studentId },
     });
+
     await tx.wallet.update({
       where: { userId: session.studentId },
       data: {
@@ -305,7 +390,6 @@ const studentConfirm = async (sessionId, studentId) => {
 
   const commission = parseFloat((session.price * 0.1).toFixed(2));
   const tutorEarnings = parseFloat((session.price - commission).toFixed(2));
-
   const platformWallet = await getPlatformWallet();
 
   await prisma.$transaction(async (tx) => {
@@ -364,7 +448,7 @@ const studentConfirm = async (sessionId, studentId) => {
         walletId: platformWallet.id,
         type: "commission",
         amount: commission,
-        description: `Comisión sesión completada`,
+        description: "Comisión sesión completada",
         sessionId,
       },
     });
@@ -443,6 +527,7 @@ const resolve = async (sessionId, favorOf) => {
       const studentWallet = await tx.wallet.findUnique({
         where: { userId: session.studentId },
       });
+
       await tx.wallet.update({
         where: { userId: session.studentId },
         data: {
@@ -487,6 +572,7 @@ const resolve = async (sessionId, favorOf) => {
       const studentWallet = await tx.wallet.findUnique({
         where: { userId: session.studentId },
       });
+
       await tx.wallet.update({
         where: { userId: session.studentId },
         data: { frozen: { decrement: session.price } },
@@ -549,7 +635,6 @@ const resolve = async (sessionId, favorOf) => {
 
 const getPaginated = async (user, { page = 1, limit = 10, status }) => {
   const where = {};
-
   if (user.role === "student") where.studentId = user.id;
   if (user.role === "tutor") where.tutorId = user.id;
   if (status) where.status = status;

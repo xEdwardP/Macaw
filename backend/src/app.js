@@ -39,13 +39,13 @@ const limiter = rateLimit({
   },
 });
 
-app.use("/api", limiter);
-
 // Middlewares
-app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
+
+app.use("/api", limiter);
 
 // Rutas
 app.use("/api/auth", require("./modules/auth/auth.routes"));

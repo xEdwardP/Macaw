@@ -181,6 +181,26 @@ const setAvailability = async (userId, slots) => {
   });
 };
 
+const getBookedSlots = async (tutorId, date) => {
+  if (!date) throw new Error("Fecha requerida");
+
+  const [y, m, d] = date.split("-").map(Number);
+
+  const dayStart = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+  const dayEnd = new Date(Date.UTC(y, m - 1, d + 1, 5, 59, 59));
+
+  const sessions = await prisma.session.findMany({
+    where: {
+      tutorId,
+      date: { gte: dayStart, lte: dayEnd },
+      status: { in: ["pending", "confirmed"] },
+    },
+    select: { startTime: true, endTime: true },
+  });
+
+  return sessions.map((s) => ({ startTime: s.startTime, endTime: s.endTime }));
+};
+
 module.exports = {
   getAll,
   getOne,
@@ -189,4 +209,5 @@ module.exports = {
   removeSubject,
   getAvailability,
   setAvailability,
+  getBookedSlots,
 };
