@@ -75,9 +75,7 @@ export default function BookSession() {
     watch,
     setValue,
     formState: { errors },
-  } = useForm({
-    resolver: zodResolver(schema),
-  });
+  } = useForm({ resolver: zodResolver(schema) });
 
   const selectedDate = watch("date");
   const selectedStartTime = watch("startTime");
@@ -100,6 +98,12 @@ export default function BookSession() {
     if (!dateStr) return false;
     return availableDays.includes(getWeekdayFromDateStr(dateStr));
   };
+
+  const selectedDayBlocks = selectedDate
+    ? tutor?.tutorProfile?.availability?.filter(
+        (a) => a.dayOfWeek === getWeekdayFromDateStr(selectedDate),
+      ) || []
+    : [];
 
   const { data: bookedSlots = [] } = useQuery({
     queryKey: ["bookedSlots", id, selectedDate],
@@ -135,12 +139,10 @@ export default function BookSession() {
 
   const availableHours = (() => {
     if (!selectedDate || !isDateAvailable(selectedDate)) return [];
-    const weekday = getWeekdayFromDateStr(selectedDate);
-    const block = tutor?.tutorProfile?.availability?.find(
-      (a) => a.dayOfWeek === weekday,
-    );
-    if (!block) return [];
-    return generateHoursInRange(block.startTime, block.endTime);
+    if (!selectedDayBlocks.length) return [];
+    return selectedDayBlocks
+      .flatMap((block) => generateHoursInRange(block.startTime, block.endTime))
+      .sort();
   })();
 
   const isHourBooked = (hour) => {
@@ -152,10 +154,6 @@ export default function BookSession() {
 
   const selectedSubject = tutor?.tutorProfile?.subjects?.find(
     (s) => s.subject.id === selectedSubjectId,
-  );
-
-  const selectedDayBlock = tutor?.tutorProfile?.availability?.find(
-    (a) => selectedDate && a.dayOfWeek === getWeekdayFromDateStr(selectedDate),
   );
 
   return (
@@ -274,10 +272,15 @@ export default function BookSession() {
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {tutor?.tutorProfile?.availability
-                      ?.sort((a, b) => a.dayOfWeek - b.dayOfWeek)
-                      .map((a) => (
+                      ?.slice()
+                      .sort((a, b) =>
+                        a.dayOfWeek !== b.dayOfWeek
+                          ? a.dayOfWeek - b.dayOfWeek
+                          : a.startTime.localeCompare(b.startTime),
+                      )
+                      .map((a, i) => (
                         <span
-                          key={a.dayOfWeek}
+                          key={`${a.dayOfWeek}-${a.startTime}-${i}`}
                           className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-100"
                         >
                           {DAYS[a.dayOfWeek]} {a.startTime}–{a.endTime}
@@ -313,10 +316,13 @@ export default function BookSession() {
                   <Clock size={16} className="text-orange-600" />
                   Hora de inicio
                 </h3>
-                {selectedDayBlock && (
+                {selectedDayBlocks.length > 0 && (
                   <p className="text-xs text-gray-400 mb-4">
-                    Horario disponible: {selectedDayBlock.startTime} —{" "}
-                    {selectedDayBlock.endTime}
+                    Horarios disponibles:{" "}
+                    {selectedDayBlocks
+                      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+                      .map((b) => `${b.startTime}–${b.endTime}`)
+                      .join("  ·  ")}
                   </p>
                 )}
                 <div className="grid grid-cols-4 gap-2">

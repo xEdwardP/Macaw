@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -18,7 +18,6 @@ import toast from "react-hot-toast";
 import { tutorsService } from "../../services/tutors.service";
 import { useAuthStore } from "../../store/authStore";
 import api from "../../services/api";
-import { useEffect } from "react";
 
 const DAYS = [
   "",
@@ -93,9 +92,15 @@ export default function TutorMyProfile() {
 
   useEffect(() => {
     if (tutor?.tutorProfile?.availability) {
-      setAvailability(tutor.tutorProfile.availability);
+      setAvailability(
+        tutor.tutorProfile.availability.map((slot, i) => ({
+          ...slot,
+          _key: `${slot.dayOfWeek}-${slot.startTime}-${i}`,
+        })),
+      );
     }
   }, [tutor]);
+
   const [newSlot, setNewSlot] = useState({
     dayOfWeek: 1,
     startTime: "08:00",
@@ -134,7 +139,10 @@ export default function TutorMyProfile() {
 
   const { mutate: saveAvailability, isPending: savingAvailability } =
     useMutation({
-      mutationFn: (slots) => tutorsService.setAvailability(slots),
+      mutationFn: (slots) =>
+        tutorsService.setAvailability(
+          slots.map(({ _key, ...slot }) => slot),
+        ),
       onSuccess: () => {
         toast.success("Disponibilidad actualizada");
         queryClient.invalidateQueries(["tutor", user?.id]);
@@ -146,15 +154,26 @@ export default function TutorMyProfile() {
     });
 
   const addSlot = () => {
-    if (availability.find((s) => s.dayOfWeek === newSlot.dayOfWeek)) {
-      toast.error("Ya tienes un horario para ese día");
+    if (newSlot.startTime >= newSlot.endTime) {
+      toast.error("La hora de inicio debe ser anterior a la hora de fin");
       return;
     }
-    setAvailability([...availability, { ...newSlot }]);
+    const sameDay = availability.filter(
+      (s) => s.dayOfWeek === newSlot.dayOfWeek,
+    );
+    const hasOverlap = sameDay.some(
+      (s) => newSlot.startTime < s.endTime && newSlot.endTime > s.startTime,
+    );
+    if (hasOverlap) {
+      toast.error("Este bloque se traslapa con otro horario del mismo día");
+      return;
+    }
+    const _key = `${newSlot.dayOfWeek}-${newSlot.startTime}-${Date.now()}`;
+    setAvailability([...availability, { ...newSlot, _key }]);
   };
 
-  const removeSlot = (dayOfWeek) =>
-    setAvailability(availability.filter((s) => s.dayOfWeek !== dayOfWeek));
+  const removeSlot = (_key) =>
+    setAvailability(availability.filter((s) => s._key !== _key));
 
   const existingSubjectIds =
     tutor?.tutorProfile?.subjects?.map((s) => s.subject.id) || [];
@@ -162,7 +181,6 @@ export default function TutorMyProfile() {
   const filteredSubjects = useMemo(() => {
     return (allSubjects || []).filter((s) => {
       if (existingSubjectIds.includes(s.id)) return false;
-
       if (filterFaculty === "general") {
         if (!s.isGeneral) return false;
       } else if (filterFaculty) {
@@ -171,15 +189,12 @@ export default function TutorMyProfile() {
         );
         if (!belongsToFaculty) return false;
       }
-
       if (filterQuarter && s.quarter !== parseInt(filterQuarter)) return false;
-
       if (
         filterSearch &&
         !s.name.toLowerCase().includes(filterSearch.toLowerCase())
       )
         return false;
-
       return true;
     });
   }, [
@@ -198,7 +213,6 @@ export default function TutorMyProfile() {
     (subjectPage - 1) * PAGE_SIZE,
     subjectPage * PAGE_SIZE,
   );
-
   const resetPage = () => setSubjectPage(1);
 
   const quarterOptions = useMemo(
@@ -359,7 +373,6 @@ export default function TutorMyProfile() {
               <h3 className="font-semibold text-gray-900 mb-4">
                 Agregar materia
               </h3>
-
               <div className="space-y-3 mb-4">
                 <div className="relative">
                   <Search
@@ -377,7 +390,6 @@ export default function TutorMyProfile() {
                     className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                   />
                 </div>
-
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -400,7 +412,6 @@ export default function TutorMyProfile() {
                       ))}
                     </select>
                   </div>
-
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Trimestre
@@ -524,10 +535,15 @@ export default function TutorMyProfile() {
               ) : (
                 <div className="space-y-2">
                   {availability
-                    .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
+                    .slice()
+                    .sort((a, b) =>
+                      a.dayOfWeek !== b.dayOfWeek
+                        ? a.dayOfWeek - b.dayOfWeek
+                        : a.startTime.localeCompare(b.startTime),
+                    )
                     .map((slot) => (
                       <div
-                        key={slot.dayOfWeek}
+                        key={slot._key}
                         className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
@@ -535,11 +551,11 @@ export default function TutorMyProfile() {
                             {DAYS[slot.dayOfWeek]}
                           </span>
                           <span className="text-sm text-gray-500">
-                            {slot.startTime} - {slot.endTime}
+                            {slot.startTime} — {slot.endTime}
                           </span>
                         </div>
                         <button
-                          onClick={() => removeSlot(slot.dayOfWeek)}
+                          onClick={() => removeSlot(slot._key)}
                           className="text-gray-400 hover:text-red-500 transition-colors"
                         >
                           <X size={16} />

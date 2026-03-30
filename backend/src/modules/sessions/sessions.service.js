@@ -63,37 +63,25 @@ const create = async (
   if (!tutor) throw new Error("Tutor no encontrado");
 
   const sessionDay = getWeekday(date);
-  const availableBlock = tutor.tutorProfile.availability.find(
+  const dayBlocks = tutor.tutorProfile.availability.filter(
     (a) => a.dayOfWeek === sessionDay,
   );
-
-  if (!availableBlock) {
+  if (dayBlocks.length === 0)
     throw new Error("El tutor no tiene disponibilidad ese día");
-  }
 
-  if (
-    !isSlotWithinBlock(
-      availableBlock.startTime,
-      availableBlock.endTime,
-      startTime,
-      endTime,
-    )
-  ) {
+  const fitsInAnyBlock = dayBlocks.some((block) =>
+    isSlotWithinBlock(block.startTime, block.endTime, startTime, endTime),
+  );
+  if (!fitsInAnyBlock)
     throw new Error(
-      `El tutor solo atiende de ${availableBlock.startTime} a ${availableBlock.endTime} ese día`,
+      "El horario solicitado está fuera de la disponibilidad del tutor",
     );
-  }
 
-  const now = getCurrentTime();
   const [y, m, d] = date.split("-").map(Number);
   const sessionDate = new Date(y, m - 1, d);
   const today = new Date(getCurrentTime().toDateString());
-  if (sessionDate < today) {
+  if (sessionDate < today)
     throw new Error("No puedes reservar una sesión en el pasado");
-  }
-  if (sessionDate < now) {
-    throw new Error("No puedes reservar una sesión en el pasado");
-  }
 
   const tutorConflict = await prisma.session.findFirst({
     where: {
@@ -102,7 +90,6 @@ const create = async (
       status: { in: ["pending", "confirmed"] },
     },
   });
-
   if (
     tutorConflict &&
     doSlotsOverlap(
@@ -111,9 +98,8 @@ const create = async (
       tutorConflict.startTime,
       tutorConflict.endTime,
     )
-  ) {
+  )
     throw new Error("El tutor ya tiene una sesión en ese horario");
-  }
 
   const studentConflict = await prisma.session.findFirst({
     where: {
@@ -122,7 +108,6 @@ const create = async (
       status: { in: ["pending", "confirmed"] },
     },
   });
-
   if (
     studentConflict &&
     doSlotsOverlap(
@@ -131,9 +116,8 @@ const create = async (
       studentConflict.startTime,
       studentConflict.endTime,
     )
-  ) {
+  )
     throw new Error("Ya tienes una sesión reservada en ese horario");
-  }
 
   const wallet = await prisma.wallet.findUnique({
     where: { userId: studentId },
@@ -143,7 +127,7 @@ const create = async (
   const price = tutor.tutorProfile.hourlyRate;
   if (wallet.balance < price) throw new Error("Saldo insuficiente");
 
-  const meetingUrl = `https://meet.jit.si/macaw-${Date.now()}`;
+  const meetingUrl = `https://meet.jit.si/macaw-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
 
   const session = await prisma.$transaction(async (tx) => {
     const newSession = await tx.session.create({
