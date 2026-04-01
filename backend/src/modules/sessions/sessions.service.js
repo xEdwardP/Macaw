@@ -1,3 +1,4 @@
+const axios = require("axios");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const { sendMail } = require("../../config/mailer");
@@ -16,6 +17,17 @@ const sessionInclude = {
   tutor: { select: { id: true, name: true, email: true, avatar: true } },
   subject: true,
   review: true,
+};
+
+const notifyMake = async (eventType, data) => {
+  try {
+    await axios.post(process.env.MAKE_WEBHOOK_URL, {
+      eventType,
+      ...data,
+    });
+  } catch (err) {
+    console.error(`Error llamando webhook Make (${eventType}):`, err.message);
+  }
 };
 
 const getAll = async (user) => {
@@ -167,17 +179,14 @@ const create = async (
   const student = await prisma.user.findUnique({ where: { id: studentId } });
   const dateStr = new Date(session.date).toLocaleDateString("es-HN");
 
-  await sendMail({
-    to: student.email,
-    subject: "Sesión reservada exitosamente",
-    html: templates.sessionBooked({
-      studentName: student.name,
-      tutorName: tutor.name,
-      subject: subjectId,
-      date: dateStr,
-      startTime: session.startTime,
-      meetingUrl: session.meetingUrl,
-    }),
+  await notifyMake("session_booked", {
+    tutorName: tutor.name,
+    tutorEmail: tutor.email,
+    studentName: student.name,
+    subject: session.subject?.name || subjectId,
+    date: dateStr,
+    startTime: session.startTime,
+    meetingUrl: session.meetingUrl,
   });
 
   return session;
@@ -202,16 +211,13 @@ const confirm = async (sessionId, tutorId) => {
   ]);
   const date = new Date(session.date).toLocaleDateString("es-HN");
 
-  await sendMail({
-    to: student.email,
-    subject: "Tu sesión fue confirmada",
-    html: templates.sessionConfirmed({
-      studentName: student.name,
-      tutorName: tutor.name,
-      date,
-      startTime: session.startTime,
-      meetingUrl: session.meetingUrl,
-    }),
+  await notifyMake("session_confirmed", {
+    studentName: student.name,
+    studentEmail: student.email,
+    tutorName: tutor.name,
+    date,
+    startTime: session.startTime,
+    meetingUrl: session.meetingUrl,
   });
 
   return updated;
@@ -305,15 +311,15 @@ const cancel = async (sessionId, user) => {
   });
   const date = new Date(session.date).toLocaleDateString("es-HN");
 
-  await sendMail({
-    to: student.email,
-    subject: "Sesión cancelada",
-    html: templates.sessionCancelled({
-      userName: student.name,
-      date,
-      startTime: session.startTime,
-      refundAmount,
-    }),
+  await notifyMake("session_cancelled", {
+    studentName: student.name,
+    studentEmail: student.email,
+    tutorName: session.tutor.name,
+    tutorEmail: session.tutor.email,
+    date,
+    startTime: session.startTime,
+    refundAmount,
+    isLateCancellation,
   });
 
   return await prisma.session.findUnique({
@@ -344,15 +350,12 @@ const complete = async (sessionId, tutorId) => {
   const tutor = await prisma.user.findUnique({ where: { id: tutorId } });
   const date = new Date(session.date).toLocaleDateString("es-HN");
 
-  await sendMail({
-    to: student.email,
-    subject: "Confirma tu sesión de tutoría",
-    html: templates.sessionPendingConfirmation({
-      studentName: student.name,
-      tutorName: tutor.name,
-      date,
-      startTime: session.startTime,
-    }),
+  await notifyMake("session_pending_confirmation", {
+    studentName: student.name,
+    studentEmail: student.email,
+    tutorName: tutor.name,
+    date,
+    startTime: session.startTime,
   });
 
   return await prisma.session.findUnique({
@@ -443,6 +446,22 @@ const studentConfirm = async (sessionId, studentId) => {
     });
   });
 
+  const student = await prisma.user.findUnique({ where: { id: studentId } });
+  const tutor = await prisma.user.findUnique({
+    where: { id: session.tutorId },
+  });
+  const date = new Date(session.date).toLocaleDateString("es-HN");
+
+  await notifyMake("session_completed", {
+    studentName: student.name,
+    studentEmail: student.email,
+    tutorName: tutor.name,
+    tutorEmail: tutor.email,
+    date,
+    startTime: session.startTime,
+    tutorEarnings,
+  });
+
   return await prisma.session.findUnique({
     where: { id: sessionId },
     include: sessionInclude,
@@ -466,21 +485,17 @@ const dispute = async (sessionId, studentId, reason) => {
   });
 
   const admins = await prisma.user.findMany({ where: { role: "admin" } });
-  for (const admin of admins) {
-    await sendMail({
-      to: admin.email,
-      subject: "Nueva disputa de sesión",
-      html: templates.sessionDisputed({
-        adminName: admin.name,
-        studentName: session.student.name,
-        tutorName: session.tutor.name,
-        date: new Date(session.date).toLocaleDateString("es-HN"),
-        startTime: session.startTime,
-        reason: reason || "Sin razón especificada",
-        sessionId,
-      }),
-    });
-  }
+
+  await notifyMake("session_disputed", {
+    adminEmails: admins.map((a) => a.email),
+    adminName: admins[0]?.name || "Administrador",
+    studentName: session.student.name,
+    tutorName: session.tutor.name,
+    date: new Date(session.date).toLocaleDateString("es-HN"),
+    startTime: session.startTime,
+    reason: reason || "Sin razón especificada",
+    sessionId,
+  });
 
   return await prisma.session.findUnique({
     where: { id: sessionId },
@@ -534,14 +549,12 @@ const resolve = async (sessionId, favorOf) => {
     const student = await prisma.user.findUnique({
       where: { id: session.studentId },
     });
-    await sendMail({
-      to: student.email,
-      subject: "Disputa resuelta a tu favor",
-      html: templates.sessionDisputeResolved({
-        userName: student.name,
-        favorOf: "student",
-        amount: session.price,
-      }),
+
+    await notifyMake("dispute_resolved", {
+      recipientName: student.name,
+      recipientEmail: student.email,
+      favorOf: "student",
+      amount: session.price,
     });
   } else {
     const commission = session.price * 0.1;
@@ -600,14 +613,12 @@ const resolve = async (sessionId, favorOf) => {
     const tutor = await prisma.user.findUnique({
       where: { id: session.tutorId },
     });
-    await sendMail({
-      to: tutor.email,
-      subject: "Disputa resuelta a tu favor",
-      html: templates.sessionDisputeResolved({
-        userName: tutor.name,
-        favorOf: "tutor",
-        amount: session.price * 0.9,
-      }),
+
+    await notifyMake("dispute_resolved", {
+      recipientName: tutor.name,
+      recipientEmail: tutor.email,
+      favorOf: "tutor",
+      amount: tutorEarnings,
     });
   }
 
