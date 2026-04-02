@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { scheduleReminders } = require("./jobs/sessionReminders");
+
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -7,7 +7,9 @@ const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const http = require("http");
 const { Server } = require("socket.io");
+const { scheduleReminders } = require("./jobs/sessionReminders");
 const { scheduleAutoConfirm } = require("./jobs/autoConfirm");
+const response = require("./utils/apiResponse");
 
 const app = express();
 const server = http.createServer(app);
@@ -21,6 +23,7 @@ const io = new Server(server, {
 
 io.on("connection", (socket) => {
   socket.on("join", (userId) => {
+    if (!userId || typeof userId !== "string") return;
     socket.join(`user:${userId}`);
   });
 });
@@ -44,7 +47,7 @@ const limiter = rateLimit({
 // Middlewares
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(helmet());
-app.use(morgan("dev"));
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json());
 
 // Rutas
@@ -64,7 +67,7 @@ app.use("/api/withdrawals", require("./modules/wallet/withdrawal.routes"));
 
 // Health check
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", app: "Macaw API" });
+  return response.ok(res, { app: "Macaw API" }, "ok");
 });
 
 // Error handler
@@ -74,6 +77,4 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () =>
-  console.log(`Macaw API corriendo`),
-);
+server.listen(PORT, () => console.log(`Macaw API running`));

@@ -1,7 +1,6 @@
 const bcrypt = require("bcryptjs");
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../../config/prisma");
 const { sign } = require("../../utils/jwt");
-const prisma = new PrismaClient();
 
 const register = async ({
   name,
@@ -12,7 +11,12 @@ const register = async ({
   universityId,
 }) => {
   const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) throw new Error("Este correo ya está registrado");
+
+  if (existing && existing.isActive)
+    throw new Error("Este correo ya está registrado");
+
+  if (existing && !existing.isActive)
+    throw new Error("Esta cuenta está desactivada. Contacta a tu institución.");
 
   if (!["student", "tutor"].includes(role)) throw new Error("Rol inválido");
 
@@ -73,7 +77,11 @@ const login = async ({ email, password }) => {
       faculty: { select: { id: true, name: true, code: true } },
     },
   });
-  if (!user || !user.isActive) throw new Error("Credenciales incorrectas");
+
+  if (!user) throw new Error("Credenciales incorrectas");
+
+  if (!user.isActive)
+    throw new Error("Tu cuenta está desactivada. Contacta a tu institución.");
 
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) throw new Error("Credenciales incorrectas");

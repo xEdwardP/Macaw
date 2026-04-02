@@ -1,6 +1,5 @@
 const OpenAI = require("openai");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../config/prisma");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -24,7 +23,7 @@ const getRecommendations = async (studentId) => {
   if (!student) throw new Error("Estudiante no encontrado");
 
   const tutors = await prisma.user.findMany({
-    where: { role: "tutor", isActive: true },
+    where: { role: "tutor", isActive: true, tutorProfile: { isNot: null } },
     select: {
       id: true,
       name: true,
@@ -89,14 +88,20 @@ Responde SOLO en JSON con este formato exacto, sin texto adicional:
 
   const raw = completion.choices[0].message.content.trim();
   const clean = raw.replace(/```json|```/g, "").trim();
-  const data = JSON.parse(clean);
 
-  const enriched = await Promise.all(
-    data.recommendations.map(async (rec) => {
+  let data;
+  try {
+    data = JSON.parse(clean);
+  } catch {
+    throw new Error("La IA devolvió una respuesta inválida, intenta de nuevo");
+  }
+
+  const enriched = data.recommendations
+    .map((rec) => {
       const tutor = tutors.find((t) => t.id === rec.tutorId);
-      return { ...rec, tutor };
-    }),
-  );
+      return tutor ? { ...rec, tutor } : null;
+    })
+    .filter(Boolean);
 
   return { recommendations: enriched };
 };

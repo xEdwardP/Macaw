@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../config/prisma");
 const paypal = require("../../config/paypal");
 
 const getSubjects = async ({ search, facultyId, page = 1, limit = 10 }) => {

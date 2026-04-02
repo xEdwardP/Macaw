@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../config/prisma");
 
 const getTutorReviews = async (tutorId, { limit = 10, offset = 0 }) => {
   const where = { revieweeId: tutorId };

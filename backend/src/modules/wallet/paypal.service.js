@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const paypal = require("../../config/paypal");
-const prisma = new PrismaClient();
+const prisma = require("../../config/prisma");
 
 const VALID_AMOUNTS = [5, 10, 20, 50, 100];
 

@@ -23,13 +23,19 @@ import AdminWithdrawals from "./pages/admin/Withdrawals";
 import AdminUniversities from "./pages/admin/Universities";
 import UniversityFaculties from "./pages/university/Faculties";
 import UniversitySubjects from "./pages/university/Subjects";
-import NotFound from './pages/public/NotFound';
+import NotFound from "./pages/public/NotFound";
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, token } = useAuthStore();
   if (!token || !user) return <Navigate to="/login" replace />;
   if (allowedRoles && !allowedRoles.includes(user.role))
     return <Navigate to="/login" replace />;
+  return children;
+}
+
+function PublicRoute({ children }) {
+  const { user, token } = useAuthStore();
+  if (token && user) return <RoleRedirect />;
   return children;
 }
 
@@ -48,8 +54,22 @@ export default function AppRouter() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <Register />
+          </PublicRoute>
+        }
+      />
 
       <Route
         path="/dashboard"

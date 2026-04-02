@@ -1,8 +1,7 @@
 const cron = require("node-cron");
-const { PrismaClient } = require("@prisma/client");
 const { sendMail } = require("../config/mailer");
 const templates = require("../utils/emailTemplates");
-const prisma = new PrismaClient();
+const prisma = require("../config/prisma");
 
 const scheduleReminders = () => {
   cron.schedule("0 8 * * *", async () => {

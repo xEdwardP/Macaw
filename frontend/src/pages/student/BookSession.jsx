@@ -145,8 +145,17 @@ export default function BookSession() {
       .sort();
   })();
 
+  const isToday = selectedDate === getTodayDateString();
+
   const isHourBooked = (hour) => {
     const hourEnd = `${String(parseInt(hour) + 1).padStart(2, "0")}:00`;
+
+    if (isToday) {
+      const now = new Date();
+      const currentHour = now.getHours();
+      if (parseInt(hour) <= currentHour) return true;
+    }
+
     return bookedSlots.some(
       (slot) => hour < slot.endTime && hourEnd > slot.startTime,
     );

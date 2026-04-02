@@ -1,8 +1,5 @@
 const axios = require("axios");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-const { sendMail } = require("../../config/mailer");
-const templates = require("../../utils/emailTemplates");
+const prisma = require("../../config/prisma");
 const { getPlatformWallet } = require("../../config/platform");
 const {
   getCurrentTime,
@@ -89,11 +86,14 @@ const create = async (
       "El horario solicitado está fuera de la disponibilidad del tutor",
     );
 
+  const now = getCurrentTime();
   const [y, m, d] = date.split("-").map(Number);
-  const sessionDate = new Date(y, m - 1, d);
-  const today = new Date(getCurrentTime().toDateString());
-  if (sessionDate < today)
-    throw new Error("No puedes reservar una sesión en el pasado");
+  const [startHour, startMinute] = startTime.split(":").map(Number);
+
+  const sessionDateTime = new Date(y, m - 1, d, startHour, startMinute, 0);
+
+  if (sessionDateTime <= now)
+    throw new Error("No puedes reservar una sesión en una fecha u hora pasada");
 
   const tutorConflict = await prisma.session.findFirst({
     where: {
