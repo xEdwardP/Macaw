@@ -635,11 +635,11 @@ async function seedUsers(universityId, faculties) {
   const password = await bcrypt.hash("password123", 12);
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@macaw.app" },
+    where: { email: "admin.macaw@yopmail.com" },
     update: {},
     create: {
       name: "Admin Macaw",
-      email: "admin@macaw.app",
+      email: "admin.macaw@yopmail.com",
       password,
       role: "admin",
     },
@@ -668,11 +668,11 @@ async function seedUsers(universityId, faculties) {
   console.log("Platform wallet created");
 
   const coordinator = await prisma.user.upsert({
-    where: { email: "coordinador@unicah.edu" },
+    where: { email: "coordinador.macaw@yopmail.com" },
     update: {},
     create: {
       name: "Coordinador Académico UNICAH",
-      email: "coordinador@unicah.edu",
+      email: "coordinador.macaw@yopmail.com",
       password,
       role: "university",
       universityId,

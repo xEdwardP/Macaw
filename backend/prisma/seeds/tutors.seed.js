@@ -6,7 +6,7 @@ const { CAREER_FACULTY_MAP } = require("./users.seed");
 const TUTORS_DATA = [
   {
     name: "Edward Javier Pineda Moran",
-    email: "epineda@unicah.edu",
+    email: "epineda@yopmail.com",
     career: "Ingeniería en Ciencias de la Computación",
     gpa: 4.8,
     quarter: 7,
