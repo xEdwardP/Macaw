@@ -1,0 +1,723 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InstitutionType {
+  university
+  college
+  school
+  technical
+  academy
+  bootcamp
+  organization
+}
+
+enum InstitutionStatus {
+  pending
+  active
+  suspended
+  rejected
+}
+
+enum DomainVerificationMethod {
+  dns
+  email
+  manual
+}
+
+enum AcademicUnitKind {
+  faculty
+  level
+  department
+  area
+  program
+}
+
+enum ThemePreference {
+  light
+  dark
+  system
+}
+
+enum SubscriptionStatus {
+  trialing
+  active
+  past_due
+  suspended
+  cancelled
+}
+
+enum InvitationStatus {
+  pending
+  accepted
+  revoked
+  expired
+}
+
+model Currency {
+  code         String  @id @db.VarChar(3)
+  name         String
+  symbol       String
+  decimals     Int     @default(2)
+  isActive     Boolean @default(true)
+  displayOrder Int     @default(0)
+
+  institutions Institution[]
+  plans        Plan[]
+  ratesFrom    ExchangeRate[] @relation("RateFrom")
+  ratesTo      ExchangeRate[] @relation("RateTo")
+
+  @@index([isActive, displayOrder])
+}
+
+model ExchangeRate {
+  id           String   @id @default(cuid())
+  fromCurrency String   @db.VarChar(3)
+  toCurrency   String   @db.VarChar(3)
+  rate         Decimal  @db.Decimal(18, 8)
+  source       String?
+  validFrom    DateTime @default(now())
+
+  from Currency @relation("RateFrom", fields: [fromCurrency], references: [code], onDelete: Restrict, onUpdate: Cascade)
+  to   Currency @relation("RateTo", fields: [toCurrency], references: [code], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([fromCurrency, toCurrency, validFrom])
+  @@index([fromCurrency, toCurrency, validFrom])
+}
+
+model Plan {
+  id           String  @id @default(cuid())
+  code         String  @unique
+  name         String
+  maxStudents  Int?
+  priceMonthly Decimal @default(0) @db.Decimal(14, 2)
+  currencyCode String  @default("USD") @db.VarChar(3)
+  features     Json    @default("{}")
+  isActive     Boolean @default(true)
+  displayOrder Int     @default(0)
+
+  currency      Currency       @relation(fields: [currencyCode], references: [code], onDelete: Restrict, onUpdate: Cascade)
+  subscriptions Subscription[]
+
+  @@index([isActive, displayOrder])
+  @@index([currencyCode])
+}
+
+model Subscription {
+  id              String             @id @default(cuid())
+  institutionId   String             @unique
+  planId          String
+  status          SubscriptionStatus @default(trialing)
+  currentStudents Int                @default(0)
+  trialEndsAt     DateTime?
+  startedAt       DateTime           @default(now())
+  renewsAt        DateTime?
+  cancelledAt     DateTime?
+  updatedAt       DateTime           @default(now()) @updatedAt
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  plan        Plan        @relation(fields: [planId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([planId])
+  @@index([status])
+}
+
+model Institution {
+  id             String            @id @default(cuid())
+  name           String
+  domain         String            @unique
+  type           InstitutionType   @default(university)
+  status         InstitutionStatus @default(active)
+  currencyCode   String            @default("USD") @db.VarChar(3)
+  timezone       String            @default("America/Tegucigalpa")
+  locale         String            @default("es")
+  logo           String?
+  primaryColor   String?
+  commissionRate Decimal?          @db.Decimal(5, 4)
+  balance        Decimal           @default(0) @db.Decimal(14, 2)
+  settings       Json              @default("{}")
+  contactName    String?
+  contactEmail   String?
+  statusReason   String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @default(now()) @updatedAt
+
+  currency       Currency            @relation(fields: [currencyCode], references: [code], onDelete: Restrict, onUpdate: Cascade)
+  users            User[]
+  tutorMemberships TutorMembership[]
+  academicUnits  AcademicUnit[]
+  subjects       Subject[]
+  subsidies      Subsidy[]
+  sessions       Session[]
+  domains        InstitutionDomain[]
+  subscription   Subscription?
+  invitations    Invitation[]
+  auditLogs      AuditLog[]
+  ledgerAccounts LedgerAccount[]
+  paymentOrders  PaymentOrder[]
+
+  @@index([type, status])
+  @@index([currencyCode])
+}
+
+model InstitutionDomain {
+  id                 String                    @id @default(cuid())
+  institutionId      String
+  domain             String                    @unique
+  isPrimary          Boolean                   @default(false)
+  verifiedAt         DateTime?
+  verificationToken  String?
+  verificationMethod DomainVerificationMethod?
+  createdAt          DateTime                  @default(now())
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([institutionId])
+}
+
+model AcademicUnit {
+  id            String           @id @default(cuid())
+  institutionId String
+  name          String
+  code          String
+  kind          AcademicUnitKind @default(faculty)
+  createdAt     DateTime         @default(now())
+
+  institution Institution   @relation(fields: [institutionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  subjects    UnitSubject[]
+  users       User[]
+  gradeLevels GradeLevel[]
+
+  @@unique([institutionId, code])
+  @@index([institutionId])
+}
+
+model GradeLevel {
+  id             String   @id @default(cuid())
+  academicUnitId String
+  name           String
+  code           String
+  orderIndex     Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  academicUnit AcademicUnit @relation(fields: [academicUnitId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  users        User[]
+
+  @@unique([academicUnitId, code])
+  @@index([academicUnitId, orderIndex])
+}
+
+model Subject {
+  id            String   @id @default(cuid())
+  institutionId String
+  name          String
+  code          String
+  termNumber    Int?
+  credits       Int?
+  isGeneral     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  institution Institution    @relation(fields: [institutionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  units       UnitSubject[]
+  tutors      TutorSubject[]
+  sessions    Session[]
+
+  @@unique([institutionId, code])
+  @@index([institutionId, isGeneral])
+}
+
+model UnitSubject {
+  id             String @id @default(cuid())
+  academicUnitId String
+  subjectId      String
+
+  academicUnit AcademicUnit @relation(fields: [academicUnitId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subject      Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([academicUnitId, subjectId])
+  @@index([subjectId])
+}
+
+model User {
+  id              String          @id @default(cuid())
+  institutionId   String?
+  academicUnitId  String?
+  gradeLevelId    String?
+  name            String
+  email           String          @unique
+  emailVerifiedAt DateTime?
+  password        String
+  role            Role            @default(student)
+  avatar          String?
+  program         String?
+  termNumber      Int?
+  academicScore   Decimal?        @db.Decimal(5, 2)
+  paypalEmail     String?
+  isActive        Boolean         @default(true)
+  locale          String?         @db.VarChar(5)
+  themePreference ThemePreference @default(system)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  institution        Institution?        @relation(fields: [institutionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  academicUnit       AcademicUnit?       @relation(fields: [academicUnitId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  gradeLevel         GradeLevel?         @relation(fields: [gradeLevelId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  tutorProfile       TutorProfile?
+  wallet             Wallet?
+  sessionsAsStudent  Session[]           @relation("StudentSessions")
+  sessionsAsTutor    Session[]           @relation("TutorSessions")
+  reviewsGiven       Review[]            @relation("ReviewsGiven")
+  reviewsReceived    Review[]            @relation("ReviewsReceived")
+  subsidies          Subsidy[]
+  withdrawalRequests WithdrawalRequest[]
+  ledgerAccounts     LedgerAccount[]
+  paymentOrders      PaymentOrder[]
+  tokens             UserToken[]
+  notifications      Notification[]
+  tutorsVerified     TutorProfile[]      @relation("TutorVerifier")
+  tutorMemberships   TutorMembership[]   @relation("TutorMemberships")
+  membershipsReviewed TutorMembership[]  @relation("TutorMembershipReviewer")
+
+  @@index([institutionId, role])
+  @@index([academicUnitId])
+  @@index([gradeLevelId])
+  @@index([role, isActive])
+}
+
+enum UserTokenPurpose {
+  password_reset
+  email_verification
+}
+
+model UserToken {
+  id        String           @id @default(cuid())
+  userId    String
+  purpose   UserTokenPurpose
+  tokenHash String           @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId, purpose])
+  @@index([expiresAt])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  payload   Json?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+model Invitation {
+  id            String           @id @default(cuid())
+  institutionId String
+  email         String
+  role          Role             @default(institution_admin)
+  token         String           @unique
+  status        InvitationStatus @default(pending)
+  invitedById   String?
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+  createdAt     DateTime         @default(now())
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([institutionId, status])
+  @@index([email])
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  institutionId String?
+  actorId       String?
+  action        String
+  entity        String
+  entityId      String?
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  institution Institution? @relation(fields: [institutionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([institutionId, createdAt])
+  @@index([entity, entityId])
+  @@index([actorId, createdAt])
+}
+
+model WithdrawalRequest {
+  id          String           @id @default(cuid())
+  userId      String
+  amount      Decimal          @db.Decimal(14, 2)
+  currency    String           @default("USD") @db.VarChar(3)
+  paypalEmail String
+  status      WithdrawalStatus @default(pending)
+  notes       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId, status])
+  @@index([status, createdAt])
+}
+
+enum WithdrawalStatus {
+  pending
+  approved
+  rejected
+}
+
+enum Role {
+  student
+  tutor
+  institution_admin
+  platform_admin
+  institution_staff
+  guardian
+}
+
+model TutorProfile {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  bio           String?
+  hourlyRate    Decimal   @default(5.00) @db.Decimal(14, 2)
+  isVerified    Boolean   @default(false)
+  verifiedAt    DateTime?
+  verifiedById  String?
+  verifiedNote  String?
+  totalSessions Int       @default(0)
+  averageRating Float     @default(0)
+  badges        String[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  verifiedBy   User?          @relation("TutorVerifier", fields: [verifiedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  subjects     TutorSubject[]
+  availability Availability[]
+
+  @@index([averageRating])
+  @@index([isVerified])
+}
+
+enum TutorMembershipStatus {
+  pending
+  verified
+  rejected
+}
+
+enum TutorMembershipOrigin {
+  tutor
+  institution
+}
+
+model TutorMembership {
+  id            String                @id @default(cuid())
+  tutorId       String
+  institutionId String
+  status        TutorMembershipStatus  @default(pending)
+  origin        TutorMembershipOrigin  @default(tutor)
+  note          String?
+  requestedAt   DateTime               @default(now())
+  reviewedAt    DateTime?
+  reviewedById  String?
+
+  tutor       User        @relation("TutorMemberships", fields: [tutorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  reviewedBy  User?       @relation("TutorMembershipReviewer", fields: [reviewedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@unique([tutorId, institutionId])
+  @@index([institutionId, status])
+  @@index([tutorId, status])
+}
+
+model TutorSubject {
+  id             String       @id @default(cuid())
+  tutorProfileId String
+  subjectId      String
+  level          SubjectLevel @default(intermediate)
+
+  tutorProfile TutorProfile @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  subject      Subject      @relation(fields: [subjectId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([tutorProfileId, subjectId])
+  @@index([subjectId])
+}
+
+enum SubjectLevel {
+  basic
+  intermediate
+  advanced
+}
+
+model Availability {
+  id             String @id @default(cuid())
+  tutorProfileId String
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+
+  tutorProfile TutorProfile @relation(fields: [tutorProfileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([tutorProfileId, dayOfWeek])
+}
+
+model Session {
+  id             String        @id @default(cuid())
+  institutionId  String?
+  studentId      String
+  tutorId        String
+  subjectId      String
+  date           DateTime
+  startTime      String
+  endTime        String
+  status         SessionStatus @default(pending)
+  meetingUrl     String?
+  price          Decimal       @db.Decimal(14, 2)
+  currency       String        @default("USD") @db.VarChar(3)
+  commissionRate Decimal       @default(0.10) @db.Decimal(5, 4)
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  institution   Institution?  @relation(fields: [institutionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  student       User          @relation("StudentSessions", fields: [studentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  tutor         User          @relation("TutorSessions", fields: [tutorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  subject       Subject       @relation(fields: [subjectId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  review        Review?
+  transactions  Transaction[]
+  ledgerEntries LedgerEntry[]
+
+  @@index([tutorId, date])
+  @@index([studentId, date])
+  @@index([status, updatedAt])
+  @@index([subjectId])
+  @@index([date])
+  @@index([institutionId, date])
+}
+
+enum SessionStatus {
+  pending
+  confirmed
+  pending_confirmation
+  disputed
+  completed
+  cancelled
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  sessionId  String   @unique
+  reviewerId String
+  revieweeId String
+  rating     Int
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  session  Session @relation(fields: [sessionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  reviewer User    @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reviewee User    @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([revieweeId, createdAt])
+  @@index([reviewerId])
+}
+
+model Wallet {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  currency       String   @default("USD") @db.VarChar(3)
+  balance        Decimal  @default(0) @db.Decimal(14, 2)
+  frozen         Decimal  @default(0) @db.Decimal(14, 2)
+  lifetimeEarned Decimal  @default(0) @db.Decimal(14, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  transactions Transaction[]
+}
+
+model Transaction {
+  id                  String          @id @default(cuid())
+  walletId            String
+  type                TransactionType
+  amount              Decimal         @db.Decimal(14, 2)
+  currency            String          @default("USD") @db.VarChar(3)
+  description         String?
+  sessionId           String?
+  ledgerTransactionId String?
+  createdAt           DateTime        @default(now())
+
+  wallet            Wallet             @relation(fields: [walletId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  session           Session?           @relation(fields: [sessionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  ledgerTransaction LedgerTransaction? @relation(fields: [ledgerTransactionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([walletId, createdAt])
+  @@index([sessionId])
+  @@index([type, createdAt])
+}
+
+enum TransactionType {
+  recharge
+  frozen
+  released
+  commission
+  subsidy
+  withdrawal
+  refund
+}
+
+model Subsidy {
+  id            String   @id @default(cuid())
+  institutionId String
+  studentId     String
+  amount        Decimal  @db.Decimal(14, 2)
+  currency      String   @default("USD") @db.VarChar(3)
+  reason        String?
+  appliedAt     DateTime @default(now())
+
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  student     User        @relation(fields: [studentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([institutionId, appliedAt])
+  @@index([studentId])
+}
+
+enum LedgerAccountKind {
+  user_wallet
+  user_escrow
+  platform_revenue
+  institution_funds
+  external_payments
+  external_payouts
+  opening_balance
+}
+
+enum LedgerDirection {
+  debit
+  credit
+}
+
+model LedgerAccount {
+  id            String            @id @default(cuid())
+  key           String            @unique
+  kind          LedgerAccountKind
+  currency      String            @db.VarChar(3)
+  userId        String?
+  institutionId String?
+  createdAt     DateTime          @default(now())
+
+  user        User?         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  institution Institution?  @relation(fields: [institutionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  entries     LedgerEntry[]
+
+  @@index([kind, currency])
+  @@index([userId])
+  @@index([institutionId])
+}
+
+model LedgerTransaction {
+  id             String   @id @default(cuid())
+  reason         String
+  idempotencyKey String?  @unique
+  sessionId      String?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  entries      LedgerEntry[]
+  transactions Transaction[]
+
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model LedgerEntry {
+  id                  String          @id @default(cuid())
+  ledgerTransactionId String
+  accountId           String
+  direction           LedgerDirection
+  amount              Decimal         @db.Decimal(14, 2)
+  currency            String          @db.VarChar(3)
+  sessionId           String?
+  createdAt           DateTime        @default(now())
+
+  ledgerTransaction LedgerTransaction @relation(fields: [ledgerTransactionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  account           LedgerAccount     @relation(fields: [accountId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  session           Session?          @relation(fields: [sessionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([ledgerTransactionId])
+  @@index([accountId, createdAt])
+  @@index([sessionId])
+}
+
+enum PaymentPurpose {
+  wallet_topup
+  institution_topup
+}
+
+enum PaymentOrderStatus {
+  created
+  completed
+  failed
+  cancelled
+}
+
+model PaymentOrder {
+  id              String             @id @default(cuid())
+  provider        String             @default("paypal")
+  providerOrderId String             @unique
+  purpose         PaymentPurpose
+  userId          String?
+  institutionId   String?
+  amount          Decimal            @db.Decimal(14, 2)
+  currency        String             @db.VarChar(3)
+  status          PaymentOrderStatus @default(created)
+  capturedAmount  Decimal?           @db.Decimal(14, 2)
+  capturedAt      DateTime?
+  failureReason   String?
+  providerPayload Json?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  institution Institution? @relation(fields: [institutionId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([userId, status])
+  @@index([institutionId, status])
+  @@index([status, createdAt])
+}
+
+enum OutboxStatus {
+  pending
+  processing
+  delivered
+  failed
+}
+
+model OutboxEvent {
+  id          String       @id @default(cuid())
+  type        String
+  payload     Json
+  status      OutboxStatus @default(pending)
+  attempts    Int          @default(0)
+  lastError   String?
+  availableAt DateTime     @default(now())
+  deliveredAt DateTime?
+  createdAt   DateTime     @default(now())
+
+  @@index([status, availableAt])
+  @@index([type, createdAt])
+}

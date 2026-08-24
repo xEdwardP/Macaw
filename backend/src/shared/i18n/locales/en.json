@@ -1,0 +1,144 @@
+{
+  "email": {
+    "brand": {
+      "tagline": "Peer tutoring platform",
+      "rights": "{{year}} Macaw · All rights reserved",
+      "privacy": "Privacy policy",
+      "support": "Support"
+    },
+    "field": {
+      "tutor": "Tutor",
+      "student": "Student",
+      "with": "With",
+      "subject": "Subject",
+      "date": "Date",
+      "time": "Time",
+      "amount": "Amount",
+      "refund": "Refund",
+      "paypal": "PayPal",
+      "reason": "Reason",
+      "institution": "Institution",
+      "role": "Role",
+      "validUntil": "Valid until",
+      "plan": "Plan",
+      "activeStudents": "Active students",
+      "planMaximum": "Plan maximum"
+    },
+    "role": {
+      "institution_admin": "administrator",
+      "institution_staff": "staff",
+      "tutor": "tutor",
+      "student": "student",
+      "guardian": "guardian"
+    },
+    "sessionBooked": {
+      "subject": "Session booked",
+      "title": "Session booked",
+      "intro": "Hi <strong>{{studentName}}</strong>, your session was booked successfully.",
+      "note": "The credits are on hold. They will be released to the tutor once the session is complete.",
+      "cta": "Join the session"
+    },
+    "sessionConfirmed": {
+      "subject": "Session confirmed",
+      "title": "Session confirmed",
+      "intro": "Hi <strong>{{studentName}}</strong>, tutor <strong>{{tutorName}}</strong> confirmed your session.",
+      "warning": "Remember that cancellations with less than 24 hours' notice are refunded at 50%.",
+      "cta": "Join the session"
+    },
+    "sessionCancelled": {
+      "subject": "Session cancelled",
+      "title": "Session cancelled",
+      "intro": "Hi <strong>{{userName}}</strong>, the following session was cancelled.",
+      "refunded": "<strong>{{amount}}</strong> was refunded to your wallet."
+    },
+    "sessionReminder": {
+      "subject": "Reminder: you have a session tomorrow",
+      "title": "Session reminder",
+      "intro": "Hi <strong>{{userName}}</strong>, this is a reminder that you have a session tomorrow.",
+      "note": "Make sure you have a good internet connection before you start.",
+      "cta": "Join the session"
+    },
+    "sessionPendingConfirmation": {
+      "subject": "Confirm your session",
+      "title": "Confirm your session",
+      "intro": "Hi <strong>{{studentName}}</strong>, tutor <strong>{{tutorName}}</strong> marked the session as complete. Please confirm that you received the tutoring.",
+      "warning": "If you do not confirm within 24 hours, the payment is released to the tutor automatically."
+    },
+    "sessionDisputed": {
+      "subject": "New session dispute",
+      "title": "New session dispute",
+      "intro": "Hi <strong>{{adminName}}</strong>, student <strong>{{studentName}}</strong> reported a problem with their session.",
+      "note": "Go to the admin panel to resolve this dispute."
+    },
+    "sessionDisputeResolved": {
+      "subject": "Dispute resolved",
+      "title": "Dispute resolved",
+      "intro": "Hi <strong>{{userName}}</strong>, the administrator resolved the dispute.",
+      "refunded": "The dispute was resolved in your favour. <strong>{{amount}}</strong> was refunded to your wallet.",
+      "credited": "The dispute was resolved in your favour. <strong>{{amount}}</strong> was credited to your wallet."
+    },
+    "withdrawalRequested": {
+      "subject": "New withdrawal request",
+      "title": "New withdrawal request",
+      "intro": "Hi <strong>{{adminName}}</strong>, tutor <strong>{{tutorName}}</strong> requested a withdrawal.",
+      "note": "Go to the admin panel to approve or reject this request."
+    },
+    "withdrawalApproved": {
+      "subject": "Withdrawal approved",
+      "title": "Withdrawal approved",
+      "intro": "Hi <strong>{{tutorName}}</strong>, your withdrawal request was approved.",
+      "note": "The payment will reach your PayPal account within the next few hours."
+    },
+    "withdrawalRejected": {
+      "subject": "Withdrawal request rejected",
+      "title": "Withdrawal request rejected",
+      "intro": "Hi <strong>{{tutorName}}</strong>, your withdrawal request was rejected.",
+      "noReason": "No reason given",
+      "note": "The amount is back in your wallet. You can try again."
+    },
+    "invitation": {
+      "subject": "{{institutionName}} invited you to Macaw",
+      "title": "You have been invited to Macaw",
+      "intro": "Hi <strong>{{name}}</strong>, <strong>{{institutionName}}</strong> invited you to join as {{role}}.",
+      "introNoName": "Hi, <strong>{{institutionName}}</strong> invited you to join as {{role}}.",
+      "note": "Once you accept you can choose your password and sign in.",
+      "cta": "Accept invitation"
+    },
+    "domainVerification": {
+      "subject": "Verify the domain {{domain}}",
+      "title": "Verify your domain",
+      "intro": "Someone asked to verify the domain <strong>{{domain}}</strong> on Macaw. If that was you, use this code in the admin panel.",
+      "warning": "If you did not request this verification, ignore this email: without this code nobody can claim your domain."
+    },
+    "planUsageWarning": {
+      "subjectReached": "{{institutionName}} reached its plan limit",
+      "subjectNear": "{{institutionName}} is close to its plan limit",
+      "titleReached": "Your plan reached its limit",
+      "titleNear": "Your plan is nearly full",
+      "intro": "Hi <strong>{{adminName}}</strong>, {{institutionName}} is using <strong>{{students}}</strong> of <strong>{{maxStudents}}</strong> student seats.",
+      "noteReached": "No new students are admitted until the plan is upgraded. Sessions already booked go ahead as normal.",
+      "noteNear": "Once it is full, new students will not be able to register."
+    },
+    "passwordReset": {
+      "subject": "Reset your Macaw password",
+      "title": "Reset your password",
+      "intro": "Hi <strong>{{name}}</strong>, we received a request to change your account password.",
+      "cta": "Choose a new password",
+      "expiry": "The link expires in {{minutes}} minutes and can only be used once.",
+      "ignore": "If this was not you, ignore this email: your password has not changed."
+    },
+    "emailVerification": {
+      "subject": "Verify your email on Macaw",
+      "title": "Confirm this email is yours",
+      "intro": "Hi <strong>{{name}}</strong>, one step left to finish setting up your account.",
+      "cta": "Verify my email",
+      "note": "Until you verify it you can still use Macaw, but you will not get important notices."
+    },
+    "tutorVerified": {
+      "subject": "Your tutor profile is verified",
+      "title": "Profile verified",
+      "intro": "Hi <strong>{{name}}</strong>, <strong>{{institutionName}}</strong> verified your tutor profile.",
+      "note": "Students will see the verified badge on your profile and in search results."
+    }
+  }
+}

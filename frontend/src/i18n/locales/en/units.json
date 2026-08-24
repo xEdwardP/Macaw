@@ -1,0 +1,76 @@
+{
+  "byInstitution": {
+    "university": {
+      "singular": "Faculty",
+      "plural": "Faculties",
+      "pick": "Select your faculty",
+      "gradeSingular": "Year",
+      "gradePlural": "Years",
+      "term": "Term"
+    },
+    "college": {
+      "singular": "Level",
+      "plural": "Levels",
+      "pick": "Select your level",
+      "gradeSingular": "Grade",
+      "gradePlural": "Grades",
+      "term": "Grade"
+    },
+    "school": {
+      "singular": "Level",
+      "plural": "Levels",
+      "pick": "Select your level",
+      "gradeSingular": "Grade",
+      "gradePlural": "Grades",
+      "term": "Grade"
+    },
+    "technical": {
+      "singular": "Area",
+      "plural": "Areas",
+      "pick": "Select your area",
+      "gradeSingular": "Module",
+      "gradePlural": "Modules",
+      "term": "Module"
+    },
+    "academy": {
+      "singular": "Area",
+      "plural": "Areas",
+      "pick": "Select your area",
+      "gradeSingular": "Module",
+      "gradePlural": "Modules",
+      "term": "Module"
+    },
+    "bootcamp": {
+      "singular": "Program",
+      "plural": "Programs",
+      "pick": "Select your program",
+      "gradeSingular": "Module",
+      "gradePlural": "Modules",
+      "term": "Module"
+    },
+    "organization": {
+      "singular": "Department",
+      "plural": "Departments",
+      "pick": "Select your department",
+      "gradeSingular": "Level",
+      "gradePlural": "Levels",
+      "term": "Period"
+    }
+  },
+  "kind": {
+    "faculty": "Faculty",
+    "level": "Level",
+    "department": "Department",
+    "area": "Area",
+    "program": "Program"
+  },
+  "institutionType": {
+    "university": "University",
+    "college": "Secondary school",
+    "school": "School",
+    "technical": "Technical institute",
+    "academy": "Academy",
+    "bootcamp": "Bootcamp",
+    "organization": "Organisation"
+  }
+}

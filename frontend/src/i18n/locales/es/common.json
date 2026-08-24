@@ -1,0 +1,137 @@
+{
+  "action": {
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "add": "Añadir",
+    "close": "Cerrar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "search": "Buscar",
+    "retry": "Reintentar",
+    "filter": "Filtrar",
+    "clear": "Limpiar",
+    "accept": "Aceptar",
+    "reject": "Rechazar",
+    "approve": "Aprobar",
+    "send": "Enviar",
+    "continue": "Continuar",
+    "goHome": "Volver al inicio",
+    "viewAll": "Ver todo",
+    "seeDetails": "Ver detalles",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "recharge": "Recargar",
+    "finish": "Finalizar"
+  },
+  "crash": {
+    "title": "Algo se rompió en esta pantalla",
+    "body": "El resto de la aplicación sigue funcionando. Puedes recargar esta página o volver al inicio.",
+    "reload": "Recargar"
+  },
+  "state": {
+    "loading": "Cargando...",
+    "empty": "No hay nada por aquí",
+    "errorTitle": "Algo salió mal",
+    "errorBody": "No pudimos cargar esta información",
+    "noResults": "Sin resultados",
+    "processing": "Procesando..."
+  },
+  "pagination": {
+    "showing": "Mostrando {{from}}-{{to}} de {{total}} {{noun}}",
+    "pageOf": "{{page}} de {{totalPages}}",
+    "results": "resultados"
+  },
+  "search": {
+    "placeholder": "Buscar...",
+    "label": "Buscar"
+  },
+  "role": {
+    "student": "Estudiante",
+    "tutor": "Tutor",
+    "institution_admin": "Coordinador",
+    "institution_staff": "Personal",
+    "guardian": "Responsable",
+    "platform_admin": "Admin"
+  },
+  "roleFilter": {
+    "all": "Todos los roles",
+    "student": "Estudiantes",
+    "tutor": "Tutores",
+    "institution_admin": "Coordinadores",
+    "institution_staff": "Personal",
+    "platform_admin": "Administradores"
+  },
+  "sessionStatus": {
+    "pending": "Pendiente",
+    "confirmed": "Confirmada",
+    "pending_confirmation": "Por confirmar",
+    "disputed": "En disputa",
+    "completed": "Completada",
+    "cancelled": "Cancelada",
+    "all": "Todos los estados"
+  },
+  "transaction": {
+    "empty": "No hay transacciones aún"
+  },
+  "theme": {
+    "label": "Tema",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
+  },
+  "language": {
+    "label": "Idioma"
+  },
+  "field": {
+    "name": "Nombre",
+    "email": "Correo",
+    "password": "Contraseña",
+    "code": "Código",
+    "status": "Estado",
+    "date": "Fecha",
+    "time": "Hora",
+    "amount": "Monto",
+    "notes": "Notas",
+    "actions": "Acciones",
+    "optional": "opcional",
+    "required": "obligatorio"
+  },
+  "unit": {
+    "student_one": "{{count}} estudiante",
+    "student_other": "{{count}} estudiantes",
+    "tutor_one": "{{count}} tutor",
+    "tutor_other": "{{count}} tutores",
+    "session_one": "{{count}} sesión",
+    "session_other": "{{count}} sesiones",
+    "review_one": "{{count}} reseña",
+    "review_other": "{{count}} reseñas",
+    "subject_one": "{{count}} materia",
+    "subject_other": "{{count}} materias",
+    "hour_one": "{{count}} hora",
+    "hour_other": "{{count}} horas"
+  },
+  "validation": {
+    "amountRequired": "Escribe un monto",
+    "minimum": "Mínimo {{value}}"
+  },
+  "transactionType": {
+    "recharge": "Recarga",
+    "frozen": "Retenido en sesión",
+    "released": "Pago liberado",
+    "commission": "Comisión de plataforma",
+    "subsidy": "Subsidio",
+    "withdrawal": "Retiro",
+    "refund": "Reembolso"
+  },
+  "withdrawalStatus": {
+    "pending": "Pendiente",
+    "approved": "Aprobado",
+    "rejected": "Rechazado"
+  }
+}

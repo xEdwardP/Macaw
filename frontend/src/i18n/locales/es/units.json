@@ -1,0 +1,76 @@
+{
+  "byInstitution": {
+    "university": {
+      "singular": "Facultad",
+      "plural": "Facultades",
+      "pick": "Selecciona tu facultad",
+      "gradeSingular": "Curso",
+      "gradePlural": "Cursos",
+      "term": "Trimestre"
+    },
+    "college": {
+      "singular": "Nivel",
+      "plural": "Niveles",
+      "pick": "Selecciona tu nivel",
+      "gradeSingular": "Grado",
+      "gradePlural": "Grados",
+      "term": "Grado"
+    },
+    "school": {
+      "singular": "Nivel",
+      "plural": "Niveles",
+      "pick": "Selecciona tu nivel",
+      "gradeSingular": "Grado",
+      "gradePlural": "Grados",
+      "term": "Grado"
+    },
+    "technical": {
+      "singular": "Área",
+      "plural": "Áreas",
+      "pick": "Selecciona tu área",
+      "gradeSingular": "Módulo",
+      "gradePlural": "Módulos",
+      "term": "Módulo"
+    },
+    "academy": {
+      "singular": "Área",
+      "plural": "Áreas",
+      "pick": "Selecciona tu área",
+      "gradeSingular": "Módulo",
+      "gradePlural": "Módulos",
+      "term": "Módulo"
+    },
+    "bootcamp": {
+      "singular": "Programa",
+      "plural": "Programas",
+      "pick": "Selecciona tu programa",
+      "gradeSingular": "Módulo",
+      "gradePlural": "Módulos",
+      "term": "Módulo"
+    },
+    "organization": {
+      "singular": "Departamento",
+      "plural": "Departamentos",
+      "pick": "Selecciona tu departamento",
+      "gradeSingular": "Nivel",
+      "gradePlural": "Niveles",
+      "term": "Periodo"
+    }
+  },
+  "kind": {
+    "faculty": "Facultad",
+    "level": "Nivel",
+    "department": "Departamento",
+    "area": "Área",
+    "program": "Programa"
+  },
+  "institutionType": {
+    "university": "Universidad",
+    "college": "Colegio",
+    "school": "Escuela",
+    "technical": "Instituto técnico",
+    "academy": "Academia",
+    "bootcamp": "Bootcamp",
+    "organization": "Organización"
+  }
+}

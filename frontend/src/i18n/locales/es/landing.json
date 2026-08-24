@@ -1,0 +1,86 @@
+{
+  "nav": {
+    "howItWorks": "¿Cómo funciona?",
+    "forInstitutions": "Para instituciones",
+    "contact": "Contacto",
+    "signIn": "Iniciar sesión",
+    "signUp": "Registrarse"
+  },
+  "hero": {
+    "badge": "Tutorías entre pares",
+    "titleLead": "Aprende de quienes",
+    "titleAccent": "ya lo lograron",
+    "body": "Conectamos estudiantes con tutores de su misma institución. Reserva sesiones, paga de forma segura y mejora tu rendimiento académico.",
+    "findTutor": "Buscar tutor",
+    "becomeTutor": "Quiero ser tutor",
+    "securePayment": "Pago seguro con PayPal",
+    "verifiedTutors": "Tutores verificados",
+    "realTime": "Sesiones en tiempo real",
+    "activeTutors": "Tutores activos",
+    "completedSessions": "Sesiones completadas",
+    "averageRating": "Valoración media",
+    "nextSession": "Próxima sesión: hoy 3:00 PM",
+    "confirmed": "Confirmada"
+  },
+  "steps": {
+    "title": "¿Cómo funciona?",
+    "subtitle": "En tres pasos sencillos puedes tener tu primera sesión de tutoría.",
+    "one": {
+      "title": "Encuentra tu tutor",
+      "body": "Busca tutores de tu institución por materia, valoración y disponibilidad."
+    },
+    "two": {
+      "title": "Reserva una sesión",
+      "body": "Elige el horario que mejor te venga y paga de forma segura con PayPal."
+    },
+    "three": {
+      "title": "Aprende en tiempo real",
+      "body": "Conéctate a la videollamada, aprende y confirma la sesión cuando termines."
+    }
+  },
+  "institutions": {
+    "badge": "Para instituciones",
+    "title": "Reduce la deserción estudiantil con datos reales",
+    "body": "Macaw le da a tu institución analítica académica en tiempo real, herramientas de subsidios para estudiantes en riesgo y tutores verificados de su propia comunidad.",
+    "point1": "Panel con analítica por unidad académica",
+    "point2": "Subsidios directos a estudiantes en riesgo",
+    "point3": "Tutores verificados de tu misma institución",
+    "point4": "Informes de sesiones y rendimiento",
+    "requestInfo": "Solicitar información",
+    "dropoutReduction": "Reducción de deserción",
+    "satisfaction": "Satisfacción estudiantil",
+    "costVsInHouse": "Coste frente a solución propia",
+    "rolloutTime": "Tiempo de implantación"
+  },
+  "contact": {
+    "badge": "Contacto",
+    "title": "¿Tu institución quiere unirse?",
+    "body": "Escríbenos y te contamos cómo poner Macaw en marcha en tu institución.",
+    "email": "Correo",
+    "whatsapp": "WhatsApp",
+    "office": "Sede",
+    "name": "Nombre completo",
+    "namePlaceholder": "Ej: Dra. Juana Martínez",
+    "institution": "Institución",
+    "institutionPlaceholder": "Ej: Universidad Nacional Autónoma",
+    "message": "Mensaje",
+    "messagePlaceholder": "Cuéntanos sobre tu institución y qué necesitas...",
+    "send": "Enviar mensaje",
+    "sent": "¡Mensaje enviado!",
+    "sentBody": "Nos pondremos en contacto contigo en menos de 24 horas.",
+    "mailSubject": "Interés de institución: {{institution}}"
+  },
+  "cta": {
+    "title": "Empieza hoy mismo",
+    "body": "Únete a cientos de estudiantes que ya están mejorando su rendimiento académico con Macaw.",
+    "createAccount": "Crear cuenta gratis",
+    "haveAccount": "Ya tengo cuenta"
+  },
+  "footer": {
+    "rights": "{{year}} Macaw · Plataforma de tutorías entre pares"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "body": "La página que buscas no existe o fue movida."
+  }
+}

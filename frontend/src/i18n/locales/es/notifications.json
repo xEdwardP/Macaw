@@ -1,0 +1,17 @@
+{
+  "title": "Notificaciones",
+  "empty": "No tienes notificaciones",
+  "markAllRead": "Marcar todo como leído",
+  "type": {
+    "fallback": "Tienes una novedad",
+    "session_booked": "{{counterpart}} reservó una sesión de {{subject}}",
+    "session_confirmed": "{{counterpart}} confirmó tu sesión de {{subject}}",
+    "session_cancelled": "{{counterpart}} canceló la sesión de {{subject}}",
+    "session_pending_confirmation": "Confirma la sesión de {{subject}} con {{counterpart}}",
+    "session_completed": "Cobraste la sesión de {{subject}} con {{counterpart}}",
+    "session_disputed": "Hay una disputa en la sesión de {{subject}}",
+    "dispute_resolved": "Se resolvió la disputa de {{subject}}",
+    "tutor_verified": "{{institutionName}} verificó tu perfil de tutor",
+    "tutor_membership_invited": "{{institutionName}} te invitó a dar tutorías en su institución"
+  }
+}

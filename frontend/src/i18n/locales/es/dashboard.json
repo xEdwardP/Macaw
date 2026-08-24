@@ -1,0 +1,54 @@
+{
+  "stat": {
+    "students": "Estudiantes",
+    "tutors": "Tutores",
+    "sessions": "Sesiones",
+    "totalSessions": "Sesiones totales",
+    "completionRate": "Tasa completado",
+    "balance": "Balance",
+    "totalSubsidised": "Total subsidiado",
+    "platformEarnings": "Ganancias plataforma",
+    "availableBalance": "Saldo disponible",
+    "activeSessions": "Sesiones activas"
+  },
+  "student": {
+    "welcome": "Bienvenido de vuelta a Macaw",
+    "upcomingSessions": "Próximas sesiones",
+    "noUpcoming": "No tienes sesiones próximas",
+    "viewAll": "Ver todas",
+    "quickActions": "Acciones rápidas",
+    "findTutor": "Buscar tutor",
+    "recommended": "Recomendados para ti",
+    "recommendedSubtitle": "Sugerencias basadas en tu perfil"
+  },
+  "tutor": {
+    "title": "Panel de tutor",
+    "earningsSummary": "Resumen de ganancias",
+    "availableBalance": "Saldo disponible",
+    "totalEarnings": "Ganancias totales",
+    "completedSessions": "Sesiones completadas",
+    "confirmedSessions": "Sesiones confirmadas",
+    "noConfirmed": "No hay sesiones confirmadas",
+    "noPending": "No hay solicitudes pendientes",
+    "quickActions": "Acciones rápidas",
+    "join": "Unirse",
+    "complete": "Completar",
+    "requests": "Solicitudes",
+    "allSessions": "Ver todas las sesiones",
+    "pendingRequests": "Solicitudes pendientes"
+  },
+  "institution": {
+    "title": "Panel de institución",
+    "subtitle": "Vista general de la plataforma",
+    "availableBalance": "Balance disponible",
+    "subsidyFunds": "Fondos para subsidios",
+    "totalStudents": "Total de estudiantes",
+    "totalSubsidised": "Total subsidiado",
+    "completedSessions": "Sesiones completadas",
+    "subsidySummary": "Resumen de subsidios",
+    "recentSessions": "Sesiones recientes",
+    "topSubjects": "Materias más solicitadas",
+    "topTutors": "Mejores tutores"
+  },
+  "greeting": "Hola, {{name}}"
+}

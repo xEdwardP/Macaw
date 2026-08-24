@@ -1,0 +1,27 @@
+{
+  "link": {
+    "home": "Inicio",
+    "dashboard": "Panel",
+    "tutors": "Tutores",
+    "sessions": "Sesiones",
+    "wallet": "Monedero",
+    "myProfile": "Mi perfil",
+    "students": "Estudiantes",
+    "subsidies": "Subsidios",
+    "units": "Unidades",
+    "subjects": "Materias",
+    "institutions": "Instituciones",
+    "users": "Usuarios",
+    "withdrawals": "Retiros",
+    "team": "Equipo",
+    "settings": "Ajustes",
+    "plans": "Planes",
+    "domains": "Dominios",
+    "import": "Importar",
+    "myInstitutions": "Mis instituciones"
+  },
+  "signOut": "Salir",
+  "openMenu": "Abrir menú",
+  "closeMenu": "Cerrar menú",
+  "account": "Mi cuenta"
+}

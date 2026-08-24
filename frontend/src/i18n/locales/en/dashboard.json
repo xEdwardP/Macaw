@@ -1,0 +1,54 @@
+{
+  "stat": {
+    "students": "Students",
+    "tutors": "Tutors",
+    "sessions": "Sessions",
+    "totalSessions": "Total sessions",
+    "completionRate": "Completion rate",
+    "balance": "Balance",
+    "totalSubsidised": "Total subsidised",
+    "platformEarnings": "Platform earnings",
+    "availableBalance": "Available balance",
+    "activeSessions": "Active sessions"
+  },
+  "student": {
+    "welcome": "Welcome back to Macaw",
+    "upcomingSessions": "Upcoming sessions",
+    "noUpcoming": "You have no upcoming sessions",
+    "viewAll": "View all",
+    "quickActions": "Quick actions",
+    "findTutor": "Find a tutor",
+    "recommended": "Recommended for you",
+    "recommendedSubtitle": "Suggestions based on your profile"
+  },
+  "tutor": {
+    "title": "Tutor panel",
+    "earningsSummary": "Earnings summary",
+    "availableBalance": "Available balance",
+    "totalEarnings": "Total earnings",
+    "completedSessions": "Completed sessions",
+    "confirmedSessions": "Confirmed sessions",
+    "noConfirmed": "No confirmed sessions",
+    "noPending": "No pending requests",
+    "quickActions": "Quick actions",
+    "join": "Join",
+    "complete": "Complete",
+    "requests": "Requests",
+    "allSessions": "See all sessions",
+    "pendingRequests": "Pending requests"
+  },
+  "institution": {
+    "title": "Institution panel",
+    "subtitle": "Overview of the platform",
+    "availableBalance": "Available balance",
+    "subsidyFunds": "Funds for subsidies",
+    "totalStudents": "Total students",
+    "totalSubsidised": "Total subsidised",
+    "completedSessions": "Completed sessions",
+    "subsidySummary": "Subsidy summary",
+    "recentSessions": "Recent sessions",
+    "topSubjects": "Most requested subjects",
+    "topTutors": "Top tutors"
+  },
+  "greeting": "Hi, {{name}}"
+}

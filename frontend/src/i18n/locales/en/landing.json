@@ -1,0 +1,86 @@
+{
+  "nav": {
+    "howItWorks": "How it works",
+    "forInstitutions": "For institutions",
+    "contact": "Contact",
+    "signIn": "Sign in",
+    "signUp": "Sign up"
+  },
+  "hero": {
+    "badge": "Peer tutoring",
+    "titleLead": "Learn from the ones who",
+    "titleAccent": "already made it",
+    "body": "We connect students with tutors from their own institution. Book sessions, pay securely and improve your academic results.",
+    "findTutor": "Find a tutor",
+    "becomeTutor": "Become a tutor",
+    "securePayment": "Secure payment with PayPal",
+    "verifiedTutors": "Verified tutors",
+    "realTime": "Sessions in real time",
+    "activeTutors": "Active tutors",
+    "completedSessions": "Completed sessions",
+    "averageRating": "Average rating",
+    "nextSession": "Next session: today 3:00 PM",
+    "confirmed": "Confirmed"
+  },
+  "steps": {
+    "title": "How it works",
+    "subtitle": "Three simple steps and you can have your first tutoring session.",
+    "one": {
+      "title": "Find your tutor",
+      "body": "Search tutors at your institution by subject, rating and availability."
+    },
+    "two": {
+      "title": "Book a session",
+      "body": "Pick the time that suits you and pay securely with PayPal."
+    },
+    "three": {
+      "title": "Learn in real time",
+      "body": "Join the video call, learn, and confirm the session when you are done."
+    }
+  },
+  "institutions": {
+    "badge": "For institutions",
+    "title": "Reduce student drop-out with real data",
+    "body": "Macaw gives your institution real-time academic analytics, subsidy tools for students at risk, and verified tutors from its own community.",
+    "point1": "Dashboard with analytics per academic unit",
+    "point2": "Subsidies straight to students at risk",
+    "point3": "Verified tutors from your own institution",
+    "point4": "Reports on sessions and performance",
+    "requestInfo": "Request information",
+    "dropoutReduction": "Drop-out reduction",
+    "satisfaction": "Student satisfaction",
+    "costVsInHouse": "Cost versus building it yourself",
+    "rolloutTime": "Rollout time"
+  },
+  "contact": {
+    "badge": "Contact",
+    "title": "Want your institution to join?",
+    "body": "Write to us and we will show you how to get Macaw running at your institution.",
+    "email": "Email",
+    "whatsapp": "WhatsApp",
+    "office": "Office",
+    "name": "Full name",
+    "namePlaceholder": "e.g. Dr. Jane Martinez",
+    "institution": "Institution",
+    "institutionPlaceholder": "e.g. National Autonomous University",
+    "message": "Message",
+    "messagePlaceholder": "Tell us about your institution and what you need...",
+    "send": "Send message",
+    "sent": "Message sent",
+    "sentBody": "We will get back to you within 24 hours.",
+    "mailSubject": "Institution enquiry: {{institution}}"
+  },
+  "cta": {
+    "title": "Start today",
+    "body": "Join hundreds of students already improving their academic results with Macaw.",
+    "createAccount": "Create a free account",
+    "haveAccount": "I already have an account"
+  },
+  "footer": {
+    "rights": "{{year}} Macaw · Peer tutoring platform"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The page you are looking for does not exist or has moved."
+  }
+}

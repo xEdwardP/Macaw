@@ -1,0 +1,137 @@
+{
+  "action": {
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "add": "Add",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "retry": "Try again",
+    "filter": "Filter",
+    "clear": "Clear",
+    "accept": "Accept",
+    "reject": "Reject",
+    "approve": "Approve",
+    "send": "Send",
+    "continue": "Continue",
+    "goHome": "Back to start",
+    "viewAll": "View all",
+    "seeDetails": "See details",
+    "copy": "Copy",
+    "copied": "Copied",
+    "recharge": "Top up",
+    "finish": "Finish"
+  },
+  "crash": {
+    "title": "Something broke on this screen",
+    "body": "The rest of the app is still working. You can reload this page or go back home.",
+    "reload": "Reload"
+  },
+  "state": {
+    "loading": "Loading...",
+    "empty": "Nothing here yet",
+    "errorTitle": "Something went wrong",
+    "errorBody": "We could not load this information",
+    "noResults": "No results",
+    "processing": "Processing..."
+  },
+  "pagination": {
+    "showing": "Showing {{from}}-{{to}} of {{total}} {{noun}}",
+    "pageOf": "{{page}} of {{totalPages}}",
+    "results": "results"
+  },
+  "search": {
+    "placeholder": "Search...",
+    "label": "Search"
+  },
+  "role": {
+    "student": "Student",
+    "tutor": "Tutor",
+    "institution_admin": "Coordinator",
+    "institution_staff": "Staff",
+    "guardian": "Guardian",
+    "platform_admin": "Admin"
+  },
+  "roleFilter": {
+    "all": "All roles",
+    "student": "Students",
+    "tutor": "Tutors",
+    "institution_admin": "Coordinators",
+    "institution_staff": "Staff",
+    "platform_admin": "Administrators"
+  },
+  "sessionStatus": {
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "pending_confirmation": "Awaiting confirmation",
+    "disputed": "Disputed",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "all": "All statuses"
+  },
+  "transaction": {
+    "empty": "No transactions yet"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "field": {
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "code": "Code",
+    "status": "Status",
+    "date": "Date",
+    "time": "Time",
+    "amount": "Amount",
+    "notes": "Notes",
+    "actions": "Actions",
+    "optional": "optional",
+    "required": "required"
+  },
+  "unit": {
+    "student_one": "{{count}} student",
+    "student_other": "{{count}} students",
+    "tutor_one": "{{count}} tutor",
+    "tutor_other": "{{count}} tutors",
+    "session_one": "{{count}} session",
+    "session_other": "{{count}} sessions",
+    "review_one": "{{count}} review",
+    "review_other": "{{count}} reviews",
+    "subject_one": "{{count}} subject",
+    "subject_other": "{{count}} subjects",
+    "hour_one": "{{count}} hour",
+    "hour_other": "{{count}} hours"
+  },
+  "validation": {
+    "amountRequired": "Enter an amount",
+    "minimum": "Minimum {{value}}"
+  },
+  "transactionType": {
+    "recharge": "Top-up",
+    "frozen": "Held for a session",
+    "released": "Payment released",
+    "commission": "Platform commission",
+    "subsidy": "Subsidy",
+    "withdrawal": "Withdrawal",
+    "refund": "Refund"
+  },
+  "withdrawalStatus": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  }
+}

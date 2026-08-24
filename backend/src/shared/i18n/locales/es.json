@@ -1,0 +1,144 @@
+{
+  "email": {
+    "brand": {
+      "tagline": "Plataforma de tutorías entre pares",
+      "rights": "{{year}} Macaw · Todos los derechos reservados",
+      "privacy": "Política de privacidad",
+      "support": "Soporte"
+    },
+    "field": {
+      "tutor": "Tutor",
+      "student": "Estudiante",
+      "with": "Con",
+      "subject": "Materia",
+      "date": "Fecha",
+      "time": "Hora",
+      "amount": "Monto",
+      "refund": "Reembolso",
+      "paypal": "PayPal",
+      "reason": "Motivo",
+      "institution": "Institución",
+      "role": "Rol",
+      "validUntil": "Válida hasta",
+      "plan": "Plan",
+      "activeStudents": "Estudiantes activos",
+      "planMaximum": "Máximo del plan"
+    },
+    "role": {
+      "institution_admin": "administrador",
+      "institution_staff": "personal",
+      "tutor": "tutor",
+      "student": "estudiante",
+      "guardian": "responsable"
+    },
+    "sessionBooked": {
+      "subject": "Sesión reservada",
+      "title": "Sesión reservada",
+      "intro": "Hola <strong>{{studentName}}</strong>, tu sesión fue reservada correctamente.",
+      "note": "Los créditos quedaron reservados. Se liberarán al tutor cuando la sesión se complete.",
+      "cta": "Unirse a la sesión"
+    },
+    "sessionConfirmed": {
+      "subject": "Sesión confirmada",
+      "title": "Sesión confirmada",
+      "intro": "Hola <strong>{{studentName}}</strong>, el tutor <strong>{{tutorName}}</strong> confirmó tu sesión.",
+      "warning": "Recuerda que las cancelaciones con menos de 24 horas sólo reciben el 50% de reembolso.",
+      "cta": "Unirse a la sesión"
+    },
+    "sessionCancelled": {
+      "subject": "Sesión cancelada",
+      "title": "Sesión cancelada",
+      "intro": "Hola <strong>{{userName}}</strong>, la siguiente sesión fue cancelada.",
+      "refunded": "Se reembolsaron <strong>{{amount}}</strong> a tu monedero."
+    },
+    "sessionReminder": {
+      "subject": "Recordatorio: tienes una sesión mañana",
+      "title": "Recordatorio de sesión",
+      "intro": "Hola <strong>{{userName}}</strong>, te recordamos que mañana tienes una sesión.",
+      "note": "Asegúrate de tener buena conexión a internet antes de empezar.",
+      "cta": "Unirse a la sesión"
+    },
+    "sessionPendingConfirmation": {
+      "subject": "Confirma tu sesión",
+      "title": "Confirma tu sesión",
+      "intro": "Hola <strong>{{studentName}}</strong>, el tutor <strong>{{tutorName}}</strong> marcó la sesión como completada. Confirma que recibiste la tutoría.",
+      "warning": "Si no confirmas en 24 horas, el pago se liberará automáticamente al tutor."
+    },
+    "sessionDisputed": {
+      "subject": "Nueva disputa de sesión",
+      "title": "Nueva disputa de sesión",
+      "intro": "Hola <strong>{{adminName}}</strong>, el estudiante <strong>{{studentName}}</strong> reportó un problema con su sesión.",
+      "note": "Entra al panel de administración para resolver esta disputa."
+    },
+    "sessionDisputeResolved": {
+      "subject": "Disputa resuelta",
+      "title": "Disputa resuelta",
+      "intro": "Hola <strong>{{userName}}</strong>, la disputa fue resuelta por el administrador.",
+      "refunded": "La disputa se resolvió a tu favor. Se reembolsaron <strong>{{amount}}</strong> a tu monedero.",
+      "credited": "La disputa se resolvió a tu favor. Se acreditaron <strong>{{amount}}</strong> a tu monedero."
+    },
+    "withdrawalRequested": {
+      "subject": "Nueva solicitud de retiro",
+      "title": "Nueva solicitud de retiro",
+      "intro": "Hola <strong>{{adminName}}</strong>, el tutor <strong>{{tutorName}}</strong> solicitó un retiro.",
+      "note": "Entra al panel de administración para aprobar o rechazar esta solicitud."
+    },
+    "withdrawalApproved": {
+      "subject": "Retiro aprobado",
+      "title": "Retiro aprobado",
+      "intro": "Hola <strong>{{tutorName}}</strong>, tu solicitud de retiro fue aprobada.",
+      "note": "El pago se enviará a tu cuenta de PayPal en las próximas horas."
+    },
+    "withdrawalRejected": {
+      "subject": "Solicitud de retiro rechazada",
+      "title": "Solicitud de retiro rechazada",
+      "intro": "Hola <strong>{{tutorName}}</strong>, tu solicitud de retiro fue rechazada.",
+      "noReason": "Sin motivo especificado",
+      "note": "El monto volvió a tu monedero. Puedes intentarlo de nuevo."
+    },
+    "invitation": {
+      "subject": "{{institutionName}} te invitó a Macaw",
+      "title": "Te invitaron a Macaw",
+      "intro": "Hola <strong>{{name}}</strong>, <strong>{{institutionName}}</strong> te invitó a unirte como {{role}}.",
+      "introNoName": "Hola, <strong>{{institutionName}}</strong> te invitó a unirte como {{role}}.",
+      "note": "Al aceptar podrás elegir tu contraseña y entrar a la plataforma.",
+      "cta": "Aceptar invitación"
+    },
+    "domainVerification": {
+      "subject": "Verificación del dominio {{domain}}",
+      "title": "Verifica tu dominio",
+      "intro": "Alguien solicitó verificar el dominio <strong>{{domain}}</strong> en Macaw. Si fuiste tú, usa este código en el panel de administración.",
+      "warning": "Si no solicitaste esta verificación, ignora este correo: sin este código nadie puede reclamar tu dominio."
+    },
+    "planUsageWarning": {
+      "subjectReached": "{{institutionName}} alcanzó el límite de su plan",
+      "subjectNear": "{{institutionName}} está por alcanzar el límite de su plan",
+      "titleReached": "Tu plan llegó al límite",
+      "titleNear": "Tu plan está por llenarse",
+      "intro": "Hola <strong>{{adminName}}</strong>, {{institutionName}} ocupa <strong>{{students}}</strong> de <strong>{{maxStudents}}</strong> cupos de estudiantes.",
+      "noteReached": "No se admitirán estudiantes nuevos hasta ampliar el plan. Las sesiones ya reservadas siguen su curso con normalidad.",
+      "noteNear": "Cuando se llene, los estudiantes nuevos no podrán registrarse."
+    },
+    "passwordReset": {
+      "subject": "Restablece tu contraseña de Macaw",
+      "title": "Restablece tu contraseña",
+      "intro": "Hola <strong>{{name}}</strong>, recibimos una petición para cambiar la contraseña de tu cuenta.",
+      "cta": "Elegir contraseña nueva",
+      "expiry": "El enlace caduca en {{minutes}} minutos y solo se puede usar una vez.",
+      "ignore": "Si no fuiste tú, ignora este correo: tu contraseña sigue siendo la misma."
+    },
+    "emailVerification": {
+      "subject": "Verifica tu correo en Macaw",
+      "title": "Confirma que este correo es tuyo",
+      "intro": "Hola <strong>{{name}}</strong>, falta un paso para terminar de crear tu cuenta.",
+      "cta": "Verificar mi correo",
+      "note": "Mientras no lo verifiques podrás usar Macaw, pero no recibirás avisos importantes."
+    },
+    "tutorVerified": {
+      "subject": "Tu perfil de tutor está verificado",
+      "title": "Perfil verificado",
+      "intro": "Hola <strong>{{name}}</strong>, <strong>{{institutionName}}</strong> verificó tu perfil de tutor.",
+      "note": "Los estudiantes verán el distintivo de verificado en tu perfil y en la búsqueda."
+    }
+  }
+}

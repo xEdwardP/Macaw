@@ -1,0 +1,17 @@
+{
+  "title": "Notifications",
+  "empty": "No notifications",
+  "markAllRead": "Mark all as read",
+  "type": {
+    "fallback": "You have an update",
+    "session_booked": "{{counterpart}} booked a {{subject}} session",
+    "session_confirmed": "{{counterpart}} confirmed your {{subject}} session",
+    "session_cancelled": "{{counterpart}} cancelled the {{subject}} session",
+    "session_pending_confirmation": "Confirm the {{subject}} session with {{counterpart}}",
+    "session_completed": "You earned the {{subject}} session with {{counterpart}}",
+    "session_disputed": "There is a dispute on the {{subject}} session",
+    "dispute_resolved": "The {{subject}} dispute was resolved",
+    "tutor_verified": "{{institutionName}} verified your tutor profile",
+    "tutor_membership_invited": "{{institutionName}} invited you to tutor at their institution"
+  }
+}

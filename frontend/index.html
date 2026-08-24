@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/macaw.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Macaw</title>
+    <script>
+      (function () {
+        try {
+          var stored = JSON.parse(localStorage.getItem("macaw-theme") || "{}");
+          var preference = stored.state && stored.state.preference;
+          if (preference !== "light" && preference !== "dark") {
+            preference = window.matchMedia("(prefers-color-scheme: dark)")
+              .matches
+              ? "dark"
+              : "light";
+          }
+          document.documentElement.dataset.theme = preference;
+        } catch (error) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
